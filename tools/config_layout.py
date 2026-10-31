@@ -106,7 +106,7 @@ SECTIONS = [
         ('premium_pyrofly_speed', 'Maximum horizontal flight speed.'),
         ('premium_pyrofly_lift', 'Maximum climb/descent speed; controlled by aim.'),
         ('premium_pyrofly_acceleration', 'Flight steering acceleration per second.'),
-        ('premium_airblast_enabled', 'Right-click airblast recoil/jump boost.'),
+        ('premium_airblast_enabled', 'Look down + right-click airblast recoil/jump boost.'),
         ('premium_airblast_force', 'Recoil impulse away from the aiming direction.'),
         ('premium_airblast_lift', 'Minimum upward boost impulse.'),
         ('premium_airblast_speed_cap', 'Cap on added boost; keeps faster existing momentum.'),

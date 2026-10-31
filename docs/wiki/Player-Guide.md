@@ -40,7 +40,7 @@ Preferences include quiet mode, tag visibility/style, glow style, Premium-partic
 
 **Primary-fire flight:** jump and hold primary fire with a supported flamethrower; WASD steers. Aim down to climb, level to hover and up to descend. Weapon fuel/state, movement restrictions and map rules still apply.
 
-**Airblast jump:** right-click with a real, fuel-consuming airblast to receive recoil/lift. Backburner and other normal flamethrowers keep native airblast costs/cooldowns/reflection. Weapons without a valid native airblast do not gain one. Flight and airblast boost are separate features.
+**Airblast jump:** look down and right-click with a real, fuel-consuming airblast to receive recoil/lift. Level or upward aim performs normal airblast without the boost. Backburner and other normal flamethrowers keep native airblast costs/cooldowns/reflection. Weapons without a valid native airblast do not gain one. Flight and airblast boost are separate features.
 
 If testing fails, `!premium_flight` prints your weapon/state/access details to your console.
 

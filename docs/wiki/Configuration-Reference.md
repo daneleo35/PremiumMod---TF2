@@ -133,7 +133,7 @@ Airblast retains the weapon's normal fuel cost and cooldown.
 | `premium_pyrofly_speed` | `400` | 100–800 | Maximum horizontal flight speed. |
 | `premium_pyrofly_lift` | `200` | 50–800 | Maximum climb/descent speed; controlled by aim. |
 | `premium_pyrofly_acceleration` | `600` | 100–3000 | Flight steering acceleration per second. |
-| `premium_airblast_enabled` | `1` | 0–1 | Right-click airblast recoil/jump boost. |
+| `premium_airblast_enabled` | `1` | 0–1 | Look down + right-click airblast recoil/jump boost. |
 | `premium_airblast_force` | `400` | 0–1500 | Recoil impulse away from the aiming direction. |
 | `premium_airblast_lift` | `350` | 0–1000 | Minimum upward boost impulse. |
 | `premium_airblast_speed_cap` | `900` | 100–2000 | Cap on added boost; keeps faster existing momentum. |

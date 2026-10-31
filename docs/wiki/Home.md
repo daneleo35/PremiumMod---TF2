@@ -4,7 +4,7 @@ Premium Mod lets you choose extra features for your TF2 server and decide who ca
 
 You decide how generous it is. Keep it mostly cosmetic, add small bonuses, or turn up the settings for a fun server.
 
-This guide covers **3.0.0-rc15**.
+This guide covers **3.0.0-rc16**.
 
 ## Where to start
 

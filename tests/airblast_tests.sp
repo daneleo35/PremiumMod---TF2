@@ -17,7 +17,7 @@ TestSetting cvAirblastForce, cvAirblastLift, cvAirblastCap, cvAirblastCooldown;
 bool g_Access = true, g_Rule = true, g_Alive = true, g_Blocked, g_WeaponValid = true, g_HasState = true;
 int g_Weapon = 40, g_Fuel = 200, g_State = 0, g_Flags = FL_ONGROUND, g_Buttons = IN_ATTACK2, g_Launches, g_Checks;
 TFClassType g_Class = TFClass_Pyro;
-float g_Clock = 100.0, g_Secondary = 99.0;
+float g_Clock = 100.0, g_Secondary = 99.0, g_Pitch = 89.0;
 float g_Velocity[3], g_Direction[3] = {0.0, 0.0, -1.0};
 bool g_DroppedGround;
 char g_Classname[64] = "tf_weapon_flamethrower";
@@ -47,7 +47,7 @@ int TestProp(int entity, PropType type, const char[] name, int size = 4, int ele
 int TestSize(int client, PropType type, const char[] name) { return client == 1 && type == Prop_Send && name[0] ? 8 : 0; }
 float TestFloat(int weapon, PropType type, const char[] name) { return ValidWeapon(weapon) && type == Prop_Send && name[0] ? g_Secondary : -1.0; }
 float TestClock() { return g_Clock; }
-void TestAngles(int client, float angles[3]) { angles[0] = 0.0; angles[1] = 0.0; angles[2] = float(client - 1); }
+void TestAngles(int client, float angles[3]) { angles[0] = g_Pitch; angles[1] = 0.0; angles[2] = float(client - 1); }
 void TestVectors(const float angles[3], float direction[3], float right[3], float up[3])
 {
     if (FloatAbs(angles[2]) > 0.001 || FloatAbs(right[0] - up[0]) > 0.001) ThrowError("bad angle client");
@@ -95,7 +95,7 @@ void Reset()
 {
     g_Access = true; g_Rule = true; g_Alive = true; g_Blocked = false; g_WeaponValid = true; g_HasState = true;
     g_Weapon = 40; g_Fuel = 200; g_State = 0; g_Flags = FL_ONGROUND; g_Buttons = IN_ATTACK2; g_Launches = 0;
-    g_Class = TFClass_Pyro; g_Clock = 100.0; g_Secondary = 99.0;
+    g_Class = TFClass_Pyro; g_Clock = 100.0; g_Secondary = 99.0; g_Pitch = 89.0;
     g_NextAirblast[1] = 0.0; g_AirblastSample[1] = false; g_DroppedGround = false;
     cvAirblastForce.FloatValue = 400.0; cvAirblastLift.FloatValue = 350.0; cvAirblastCap.FloatValue = 900.0; cvAirblastCooldown.FloatValue = 0.75;
     for (int axis; axis < 3; axis++) { g_Velocity[axis] = 0.0; g_Direction[axis] = axis == 2 ? -1.0 : 0.0; }
@@ -109,9 +109,23 @@ public int main()
     Check(g_Launches == 1 && g_Velocity[2] == 400.0, "real downward blast launches once");
     Check(g_DroppedGround && !(g_Flags & FL_ONGROUND), "grounded blast can take off");
     Check(g_Fuel == 180 && g_Secondary == 100.75, "native ammo cost and weapon timers remain untouched");
+    Check(!PremiumAirblastLookingDown(0.0) && !PremiumAirblastLookingDown(-0.1), "level/upward pitch rejected");
+    Check(PremiumAirblastLookingDown(0.1) && PremiumAirblastLookingDown(89.0), "downward pitch accepted");
+    Check(!PremiumAirblastLookingDown(180.0) && !PremiumAirblastLookingDown(270.0), "invalid/wrapped upward pitches rejected");
     ApplyAirblastBoost(1); Check(g_Launches == 1, "consumed observation cannot launch twice");
     g_Clock = 100.1; CaptureAirblast(1); ApplyAirblastBoost(1);
     Check(g_Launches == 1, "holding right click between actual blasts adds no per-frame thrust");
+    Reset(); g_Pitch = 0.0; CaptureAirblast(1); NativeBlast(); ApplyAirblastBoost(1);
+    Check(g_Launches == 0 && g_Fuel == 180 && g_Secondary == 100.75, "level airblast stays native without jump boost");
+    Check(!g_DroppedGround && g_NextAirblast[1] == 0.0, "rejected angle cannot detach ground or consume boost cooldown");
+    Reset(); g_Pitch = -45.0; CaptureAirblast(1); NativeBlast(); ApplyAirblastBoost(1);
+    Check(g_Launches == 0 && g_Fuel == 180, "upward airblast spends normal fuel without boost");
+    Reset(); CaptureAirblast(1); NativeBlast(); g_Pitch = 0.0; ApplyAirblastBoost(1);
+    Check(g_Launches == 0, "looking level after capture cancels boost");
+    Reset(); g_Pitch = 0.0; CaptureAirblast(1); NativeBlast(); g_Pitch = 89.0; ApplyAirblastBoost(1);
+    Check(g_Launches == 0, "looking down after a level blast cannot create a delayed boost");
+    Reset(); g_Pitch = 0.1; CaptureAirblast(1); NativeBlast(); ApplyAirblastBoost(1);
+    Check(g_Launches == 1, "any aim below the horizon permits the configured boost");
     Reset(); g_Fuel = 20; CaptureAirblast(1); NativeBlast(); ApplyAirblastBoost(1);
     Check(g_Launches == 1 && g_Fuel == 0, "last complete airblast fuel charge can boost");
     Reset(); g_Fuel = 10; CaptureAirblast(1); ApplyAirblastBoost(1);

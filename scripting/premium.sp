@@ -25,7 +25,7 @@
 #endif
 #include "premium/core.inc"
 
-#define VERSION "3.0.0-rc15"
+#define VERSION "3.0.0-rc16"
 #define STEAM_LENGTH 32
 #define MEMBER_TABLE "premium_v3_members"
 #define TRIAL_TABLE "premium_v3_trials"

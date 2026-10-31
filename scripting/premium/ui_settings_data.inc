@@ -169,7 +169,7 @@ char g_UiSettingLabels[][] = {
     "Maximum horizontal flight speed",
     "Maximum climb/descent speed",
     "Flight steering acceleration per second",
-    "Right-click airblast recoil/jump boost",
+    "Look down + right-click airblast recoil/jump boost",
     "Recoil impulse away from the aiming direction",
     "Minimum upward boost impulse",
     "Cap on added boost",

@@ -91,7 +91,7 @@ void CreateConfiguration()
     cvFlightSpeed = Setting("premium_pyrofly_speed", "400", "Maximum horizontal WASD flight speed; aim down for lift", 100.0, 800.0);
     cvFlightLift = Setting("premium_pyrofly_lift", "200", "Maximum flight climb/descent speed controlled by aim pitch", 50.0, 800.0);
     cvFlightAcceleration = Setting("premium_pyrofly_acceleration", "600", "Flight steering acceleration per second", 100.0, 3000.0);
-    cvAirblast = Setting("premium_airblast_enabled", "1", "Pyro recoil jump on a real fuel-consuming airblast; map flight bans also block this", 0.0, 1.0);
+    cvAirblast = Setting("premium_airblast_enabled", "1", "Pyro recoil jump only while looking down on a real fuel-consuming airblast; map flight bans also block this", 0.0, 1.0);
     cvAirblastForce = Setting("premium_airblast_force", "400", "Airblast boost recoil away from aim direction", 0.0, 1500.0);
     cvAirblastLift = Setting("premium_airblast_lift", "350", "Minimum upward impulse per airblast boost, added to current velocity", 0.0, 1000.0);
     cvAirblastCap = Setting("premium_airblast_speed_cap", "900", "Boost horizontal/upward speed cap; preserves pre-existing faster momentum", 100.0, 2000.0);

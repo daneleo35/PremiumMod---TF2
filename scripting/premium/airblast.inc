@@ -13,6 +13,8 @@ public void CaptureAirblast(int client)
 {
     g_AirblastSample[client] = false;
     if (!AirblastClientAllowed(client) || !(GetClientButtons(client) & IN_ATTACK2)) return;
+    float angles[3]; GetClientEyeAngles(client, angles);
+    if (!PremiumAirblastLookingDown(angles[0])) return;
     int weapon = GetEntPropEnt(client, Prop_Send, "m_hActiveWeapon");
     if (!ValidWeapon(weapon) || !HasEntProp(weapon, Prop_Send, "m_flNextSecondaryAttack")) return;
     char classname[64]; GetEntityClassname(weapon, classname, sizeof(classname));
@@ -43,6 +45,7 @@ public void ApplyAirblastBoost(int client)
     if (cvAirblastForce.FloatValue <= 0.0 && cvAirblastLift.FloatValue <= 0.0) return;
     float angles[3], direction[3], before[3], velocity[3];
     GetClientEyeAngles(client, angles);
+    if (!PremiumAirblastLookingDown(angles[0])) return;
     GetAngleVectors(angles, direction, NULL_VECTOR, NULL_VECTOR);
     GetEntPropVector(client, Prop_Data, "m_vecVelocity", before);
     PremiumAirblastImpulse(direction, before, cvAirblastForce.FloatValue, cvAirblastLift.FloatValue, cvAirblastCap.FloatValue, velocity);

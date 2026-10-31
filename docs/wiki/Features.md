@@ -27,7 +27,7 @@ Each key below can be used in `premium_features.cfg`, grant commands and individ
 | `bhop` | Held-jump bunnyhop/trimp with gain and speed cap |
 | `doublejump` | Optional follow-up trimp jump; also needs the bhop/trimp feature |
 | `flight` | Pyro jump + primary-fire flight, WASD steering and aim-controlled height |
-| `airblast` | Pyro recoil/jump boost from an actual fuel-consuming native right-click airblast |
+| `airblast` | Pyro recoil/jump boost while looking down, from an actual fuel-consuming native right-click airblast |
 | `teleport` | `!save_loc` / `!load_loc` saved-location teleport |
 
 `teleporter` buildings and `teleport` saved locations are different features. The `deadringer` grant key controls duration, while the cvar named `premium_deadringer` controls the separate fake-kill notice below.

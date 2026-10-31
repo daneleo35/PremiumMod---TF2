@@ -1,3 +1,9 @@
+bool PremiumAirblastLookingDown(float pitch)
+{
+    // Source eye pitch is positive below the horizon; level/upward aim cannot boost.
+    return pitch > 0.0 && pitch <= 90.0;
+}
+
 bool PremiumAirblastFired(float previousCooldown, float currentCooldown, float clock, int beforeAmmo, int afterAmmo)
 {
     return previousCooldown >= 0.0 && currentCooldown > previousCooldown && currentCooldown > clock
