@@ -1,6 +1,6 @@
 # Troubleshooting
 
-Start with `sm plugins list`, `sm_premium_diagnostics` and the latest SourceMod error log. Confirm version `3.0.0-rc18` and remove older duplicate Premium binaries. Use an ordinary authenticated test account as well as an administrator: root/flag access can hide permission and shop problems.
+Start with `sm plugins list`, `sm_premium_diagnostics` and the latest SourceMod error log. Confirm version `3.0.0-rc19` and remove older duplicate Premium binaries. Use an ordinary authenticated test account as well as an administrator: root/flag access can hide permission and shop problems.
 
 ## Plugin will not load
 
@@ -10,7 +10,9 @@ For a translation parsing error, replace `addons/sourcemod/translations/premium_
 
 ## No tag in ordinary chat
 
-If the tag appears with colour digits such as `3EFF3E`, install RC15's plugin **and** its matching translation file. Reload translations and the plugin. This fixes colour being put in the filtered name field; changing your tag setting is not required.
+If the tag appears with colour digits such as `3EFF3E`, install the latest plugin. RC19 also fixes tags disappearing when an older translation file lacks the newer chat layouts. Keep your current configs; changing the tag setting is not required.
+
+`sm_premium_chat` now reports prepared prefixes separately from tagged messages actually sent, along with built-in layout use and the last send/skip reason. This helps distinguish a layout problem from hidden tags or inactive membership.
 
 Tags are automatic for members and active full trials. `sm_premium_chat` is a **diagnostic command**, not an activation step.
 

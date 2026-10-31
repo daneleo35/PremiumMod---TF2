@@ -38,10 +38,11 @@ void TestColors(char[] text, int client, bool strip = false, int size = 256)
     ReplaceString(text, size, "{teamcolor}", strip ? "" : "\x03");
     ReplaceString(text, size, "{gold}", strip ? "" : "\x07FFD700");
 }
-bool g_TranslateAvailable = true;
+bool g_TranslateAvailable = true, g_TranslateInvalid;
 bool PremiumChatTranslate(const char[] phrase, int recipient, char[] layout, int size)
 {
     if (recipient != 1 || !g_TranslateAvailable) return false;
+    if (g_TranslateInvalid) { strcopy(layout, size, "@NAME@ without message marker"); return true; }
     if (StrEqual(phrase, "Chat Layout All")) strcopy(layout, size, "{default}@NAME@{default} : @TEXT@");
     else if (StrEqual(phrase, "Chat Layout All Dead")) strcopy(layout, size, "{default}*DEAD* @NAME@{default} : @TEXT@");
     else if (StrEqual(phrase, "Chat Layout All Spec")) strcopy(layout, size, "{default}*SPEC* @NAME@{default} : @TEXT@");
@@ -119,8 +120,21 @@ public int main()
     Check(!PremiumChatCompose("@NAME@ @TEXT@ @TEXT@", nameToken, layout, sizeof(layout)), "duplicate text markers rejected");
     Check(!PremiumChatCompose("@NAME@ only", nameToken, layout, sizeof(layout)), "missing text marker rejected");
     g_TranslateAvailable = false;
-    Check(!BuildPremiumChatFormat(1, 1, "TF_Chat_All", nameToken, layout, sizeof(layout)), "old/missing translations preserve original native chat");
+    Check(BuildPremiumChatFormat(1, 1, "TF_Chat_All", nameToken, layout, sizeof(layout)), "old/missing translations retain the membership tag through built-in layout");
+    Check(StrContains(layout, "\x073EFF3E[Premium]") >= 0 && StrContains(layout, "%s1") >= 0 && StrContains(layout, "%s2") >= 0, "fallback keeps colour in layout and user data in native parameters");
+    for (int i; i < sizeof(formats); i++)
+    {
+        Check(BuildPremiumChatFormat(1, 1, formats[i], nameToken, layout, sizeof(layout)), "all eight contexts work without newly installed translations");
+        Check(StrContains(layout, "[Premium]") >= 0, "fallback cannot silently discard the prepared tag");
+    }
+    Check(g_ChatDefaultLayouts[1] >= 9, "diagnostics count built-in layout use");
+    Check(!BuildPremiumChatFormat(1, 1, "TF_Chat_Unknown", nameToken, layout, sizeof(layout)), "fallback does not rewrite unknown message formats");
+    Check(!BuildPremiumChatFormat(1, 1, "TF_Chat_All", nameToken, layout, 8), "built-in fallback cannot bypass a small output budget");
     g_TranslateAvailable = true;
+    g_TranslateInvalid = true;
+    Check(BuildPremiumChatFormat(1, 1, "TF_Chat_All", nameToken, layout, sizeof(layout)) && StrContains(layout, "%s2") >= 0, "invalid optional layout falls back without losing chat text");
+    g_TranslateInvalid = false;
+    Check(!PrefixPremiumName(0, name, sizeof(name)) && !PrefixPremiumName(-1, name, sizeof(name)), "invalid chat authors cannot index diagnostic arrays");
     for (int style; style <= 3; style++)
     {
         g_Options[1].tagStyle = style; strcopy(nameToken, sizeof(nameToken), "%s1");
@@ -130,7 +144,7 @@ public int main()
     Check(!PrefixPremiumName(1, name, sizeof(name)) && StrEqual(name, "Dane"), "empty configured tag remains empty");
     Check(g_ChatTagged[1] > 0, "prefix diagnostics record successful transformations");
     ResetChatDiagnostics(1);
-    Check(g_ChatTagged[1] == 0 && g_ChatSeen[1] == 0 && !g_LastChatFormat[1][0], "new client session resets diagnostics");
+    Check(g_ChatTagged[1] == 0 && g_ChatSeen[1] == 0 && !g_LastChatFormat[1][0] && g_ChatDefaultLayouts[1] == 0 && g_ChatSent[1] == 0 && !g_LastChatResult[1][0], "new client session resets all preparation/delivery diagnostics");
     PrintToServer("PASS: %d native chat tag assertions", g_Checks);
     return g_Checks;
 }

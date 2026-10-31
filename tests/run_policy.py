@@ -146,7 +146,7 @@ if __name__ == '__main__':
     run('options_tests.smx', 1000)
     run('celebrations_tests.smx', 10)
     run('airblast_tests.smx', 30)
-    run('chat_tests.smx', 60)
+    run('chat_tests.smx', 85)
     run('tooltip_tests.smx', 20)
 
     run('features_tests.smx', 380)

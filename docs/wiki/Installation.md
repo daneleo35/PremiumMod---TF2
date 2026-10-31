@@ -76,7 +76,7 @@ Merge the [database example](https://github.com/daneleo35/PremiumMod---TF2/blob/
 
 ## Upgrading
 
-RC15 chat-tag fix: replace both `premium.smx` and `premium_rebuilt.phrases.txt`. Keep your existing configs. The new chat layout phrases are required for the corrected native tags.
+RC19 has built-in chat layouts, so older valid translation files no longer make normal chat tags disappear. The translation file itself is still required for the plugin's other messages. Keep your existing configs; replacing the plugin is enough for this fix when upgrading from RC18.
 
 1. Back up the plugin, configuration, translations, database and any points outbox files together.
 2. Let pending purchases settle before changing storage settings.

@@ -18,6 +18,23 @@ bool PremiumChatPhrase(const char[] format, char[] phrase, int size)
     phrase[0] = '\0'; return false;
 }
 
+bool PremiumChatDefaultLayout(const char[] format, char[] layout, int size)
+{
+    char phrase[40];
+    if (!PremiumChatPhrase(format, phrase, sizeof(phrase))) return false;
+    char text[192];
+    if (StrEqual(phrase, "Chat Layout All")) strcopy(text, sizeof(text), "{default}@NAME@{default} :  @TEXT@");
+    else if (StrEqual(phrase, "Chat Layout All Dead")) strcopy(text, sizeof(text), "{default}*DEAD* @NAME@{default} :  @TEXT@");
+    else if (StrEqual(phrase, "Chat Layout All Spec")) strcopy(text, sizeof(text), "{default}*SPEC* @NAME@{default} :  @TEXT@");
+    else if (StrEqual(phrase, "Chat Layout Team")) strcopy(text, sizeof(text), "{default}(TEAM) @NAME@{default} :  @TEXT@");
+    else if (StrEqual(phrase, "Chat Layout Team Dead")) strcopy(text, sizeof(text), "{default}*DEAD*(TEAM) @NAME@{default} :  @TEXT@");
+    else if (StrEqual(phrase, "Chat Layout Team Location")) strcopy(text, sizeof(text), "{default}(TEAM) @NAME@{default} @LOCATION@ :  @TEXT@");
+    else if (StrEqual(phrase, "Chat Layout Spec")) strcopy(text, sizeof(text), "{default}(Spectator) @NAME@{default} :  @TEXT@");
+    else strcopy(text, sizeof(text), "{default}(Coach) @NAME@{default} :  @TEXT@");
+    if (strlen(text) >= size) return false;
+    strcopy(layout, size, text); return true;
+}
+
 // Put colour in SayText2's layout, never its filtered player-name/text fields.
 // Only these server-owned tokens become localization placeholders. User strings
 // remain separate message parameters, including names containing '%' or '{...}'.

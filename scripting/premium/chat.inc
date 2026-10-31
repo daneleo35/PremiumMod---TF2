@@ -2,11 +2,14 @@
 UserMsg g_ChatMessage = INVALID_MESSAGE_ID;
 bool g_SendingTaggedChat;
 int g_ChatSeen[MAXPLAYERS + 1], g_ChatTagged[MAXPLAYERS + 1];
+int g_ChatSent[MAXPLAYERS + 1], g_ChatDefaultLayouts[MAXPLAYERS + 1];
 char g_LastChatFormat[MAXPLAYERS + 1][64];
+char g_LastChatResult[MAXPLAYERS + 1][128];
 
 void ResetChatDiagnostics(int client)
 {
     g_ChatSeen[client] = 0; g_ChatTagged[client] = 0; g_LastChatFormat[client][0] = '\0';
+    g_ChatSent[client] = 0; g_ChatDefaultLayouts[client] = 0; g_LastChatResult[client][0] = '\0';
 }
 
 void InitializeChatTags()
@@ -22,7 +25,9 @@ void InitializeChatTags()
 
 bool PrefixPremiumName(int client, char[] name, int capacity)
 {
-    if (!HasPremium(client) || !cvChatTags.BoolValue || g_Options[client].hideTag) return false;
+    if (!ValidClient(client)) return false;
+    if (!HasPremium(client) || !cvChatTags.BoolValue || g_Options[client].hideTag)
+    { strcopy(g_LastChatResult[client], sizeof(g_LastChatResult[]), "membership, tag setting or personal visibility blocks prefix"); return false; }
     char tag[96], plain[96];
     if (FlagPremium(client) || g_Player[client].member) cvMemberTag.GetString(tag, sizeof(tag));
     else cvTrialTag.GetString(tag, sizeof(tag));
@@ -38,15 +43,18 @@ bool PrefixPremiumName(int client, char[] name, int capacity)
     }
     strcopy(plain, sizeof(plain), tag);
     CReplaceColorCodes(plain, client, true, sizeof(plain));
-    if (!plain[0] || StrContains(name, plain) >= 0) return false;
+    if (!plain[0] || StrContains(name, plain) >= 0)
+    { strcopy(g_LastChatResult[client], sizeof(g_LastChatResult[]), plain[0] ? "name already contains tag" : "configured tag is empty"); return false; }
     ReplaceString(tag, sizeof(tag), "\n", "");
     ReplaceString(tag, sizeof(tag), "\r", "");
     CReplaceColorCodes(tag, client, false, sizeof(tag));
     // Never truncate an existing player name to make room for a tag.
-    if (strlen(tag) + strlen(name) + 3 > capacity) return false;
+    if (strlen(tag) + strlen(name) + 3 > capacity)
+    { strcopy(g_LastChatResult[client], sizeof(g_LastChatResult[]), "tag exceeds prefix/name capacity"); return false; }
     char original[128]; strcopy(original, sizeof(original), name);
     FormatEx(name, capacity, "%s \x03%s", tag, original);
     g_ChatTagged[client]++;
+    strcopy(g_LastChatResult[client], sizeof(g_LastChatResult[]), "prefix prepared");
     return true;
 }
 
@@ -83,9 +91,19 @@ bool PremiumChatTranslate(const char[] phrase, int recipient, char[] layout, int
 bool BuildPremiumChatFormat(int author, int recipient, const char[] nativeFormat, const char[] nameToken, char[] output, int size)
 {
     char phrase[40], layout[256];
-    if (!PremiumChatPhrase(nativeFormat, phrase, sizeof(phrase)) || !PremiumChatTranslate(phrase, recipient, layout, sizeof(layout))) return false;
+    if (!PremiumChatPhrase(nativeFormat, phrase, sizeof(phrase))) return false;
+    if (PremiumChatTranslate(phrase, recipient, layout, sizeof(layout)))
+    {
+        CReplaceColorCodes(layout, author, false, sizeof(layout));
+        if (PremiumChatCompose(layout, nameToken, output, size)) return true;
+    }
+    // Chat-layout translations are optional. An older installed/cached phrase
+    // file must not silently turn a prepared membership tag back into bare chat.
+    if (!PremiumChatDefaultLayout(nativeFormat, layout, sizeof(layout))) return false;
     CReplaceColorCodes(layout, author, false, sizeof(layout));
-    return PremiumChatCompose(layout, nameToken, output, size);
+    if (!PremiumChatCompose(layout, nameToken, output, size)) return false;
+    g_ChatDefaultLayouts[author]++;
+    return true;
 }
 
 public Action InterceptPremiumChat(UserMsg id, BfRead message, const int[] players, int count, bool reliable, bool init)
@@ -96,7 +114,11 @@ public Action InterceptPremiumChat(UserMsg id, BfRead message, const int[] playe
     int chat = message.ReadByte();
     char format[64]; message.ReadString(format, sizeof(format));
     if (ValidClient(client)) { g_ChatSeen[client]++; strcopy(g_LastChatFormat[client], sizeof(g_LastChatFormat[]), format); }
-    if (!HasPremium(client) || g_Options[client].hideTag || !PremiumPlayerChatFormat(format) || count <= 0) return Plugin_Continue;
+    if (!HasPremium(client) || g_Options[client].hideTag || !PremiumPlayerChatFormat(format) || count <= 0)
+    {
+        if (ValidClient(client)) strcopy(g_LastChatResult[client], sizeof(g_LastChatResult[]), !HasPremium(client) ? "membership inactive" : (g_Options[client].hideTag ? "tag hidden in personal settings" : "unsupported format or no recipients"));
+        return Plugin_Continue;
+    }
     char parameters[4][256];
     for (int i; i < 4; i++) message.ReadString(parameters[i], sizeof(parameters[]));
     DataPack pending = new DataPack();
@@ -143,22 +165,27 @@ public void SendPremiumChat(any data)
     for (int i; i < valid; i++)
     {
         char taggedFormat[512];
-        bool useTag = tagged && BuildPremiumChatFormat(client, recipients[i], format, nameToken, taggedFormat, sizeof(taggedFormat)) && strlen(taggedFormat) <= layoutBudget;
+        bool built = tagged && BuildPremiumChatFormat(client, recipients[i], format, nameToken, taggedFormat, sizeof(taggedFormat));
+        bool useTag = built && strlen(taggedFormat) <= layoutBudget;
         int recipient[1]; recipient[0] = recipients[i];
-        SendPremiumChatPayload(client, chat, useTag ? taggedFormat : format, parameters, recipient, 1, reliable);
+        bool sent = SendPremiumChatPayload(client, chat, useTag ? taggedFormat : format, parameters, recipient, 1, reliable);
+        if (!sent) strcopy(g_LastChatResult[client], sizeof(g_LastChatResult[]), "SayText2 message creation failed");
+        else if (useTag) { g_ChatSent[client]++; strcopy(g_LastChatResult[client], sizeof(g_LastChatResult[]), "tagged chat sent"); }
+        else if (tagged) strcopy(g_LastChatResult[client], sizeof(g_LastChatResult[]), built ? "tagged layout exceeds packet budget; original chat sent" : "layout failed; original chat sent");
     }
     g_SendingTaggedChat = false;
 }
 
-void SendPremiumChatPayload(int client, int chat, const char[] format, const char[][] parameters, const int[] recipients, int valid, bool reliable)
+bool SendPremiumChatPayload(int client, int chat, const char[] format, const char[][] parameters, const int[] recipients, int valid, bool reliable)
 {
     BfWrite output = view_as<BfWrite>(StartMessageEx(g_ChatMessage, recipients, valid, reliable ? USERMSG_RELIABLE : 0));
-    if (output == null) return;
+    if (output == null) return false;
     output.WriteByte(client);
     output.WriteByte(chat);
     output.WriteString(format);
     for (int i; i < 4; i++) output.WriteString(parameters[i]);
     EndMessage();
+    return true;
 }
 
 public Action CommandChatDiagnostics(int client, int args)
@@ -168,6 +195,8 @@ public Action CommandChatDiagnostics(int client, int args)
         VERSION, HasPremium(client), cvChatTags.BoolValue, g_Options[client].hideTag, g_Options[client].tagStyle,
         ExistingChatProcessorActive(), g_ChatMessage, g_ChatSeen[client], g_ChatTagged[client],
         g_LastChatFormat[client][0] ? g_LastChatFormat[client] : "none");
+    PrintToConsole(client, "Chat delivery: sent-to-recipients=%d built-in-layouts=%d last-result=%s",
+        g_ChatSent[client], g_ChatDefaultLayouts[client], g_LastChatResult[client][0] ? g_LastChatResult[client] : "none");
     Tell(client, "Chat diagnostics printed in your console. Send a normal chat message first.");
     return Plugin_Handled;
 }
