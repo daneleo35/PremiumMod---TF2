@@ -90,6 +90,32 @@ sm_premium_profile cosmetic next
 
 Or set `premium_gameplay_teams "0"` to block gameplay bonuses on both teams. Membership and configured cosmetics can remain. Presets do not rewrite membership or the free-feature grant file. See [Class/map rules](Class-and-Map-Rules.md).
 
+## Custom chat tags
+
+Choose the wording and colour for members and trials in section 11 of `cfg/sourcemod/premium_rebuilt.cfg`. For example:
+
+```cfg
+premium_chat_tags       "1"
+premium_chat_tag        "{gold}[VIP]{default}"
+premium_trial_chat_tag  "{aqua}[Guest]{default}"
+```
+
+Members will have a gold `[VIP]` tag. Players on a free or points-bought trial will have an aqua `[Guest]` tag. Change the text inside the brackets to whatever suits your server; the brackets are optional too. This only changes how the tag looks, and does not change anyone's access or membership.
+
+Colours include `{green}`, `{gold}`, `{red}`, `{aqua}` and `{purple}`. You can mix colours, for example `"{gold}[{purple}Supporter{gold}]{default}"`. Keep `{default}` at the end so the tag colour stops there. Keep tags short so there is room for the player's name and message.
+
+Players can normally choose team colour, gold or plain in their preferences. To keep everyone using your chosen colours:
+
+```cfg
+premium_tag_styles "0"
+```
+
+Use `"7"` to allow all three personal styles again. These choices keep your configured tag wording.
+
+Run `exec sourcemod/premium_rebuilt.cfg` in the server console after saving. The next normal chat message uses the new settings; players do not need an activation command. If you previously saved settings from the admin menu, update any matching setting in its saved block at the end of the config as well: that block runs last. In particular, an old saved `premium_tag_styles` value can override the one in section 11.
+
+`premium_tag` controls the plugin's own notices. Use `premium_chat_tag` and `premium_trial_chat_tag` for tags beside player names. These text values are edited in the config; the in-game numeric settings menu does not edit their wording.
+
 ## Applying the main file
 
 From server console or as an admin with full access:

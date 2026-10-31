@@ -115,6 +115,15 @@ The shop groups offers by category and shows the price, length, remaining balanc
 
 Premium and Trial tags appear automatically in normal chat.
 
+To give them your own names and colours, edit `cfg/sourcemod/premium_rebuilt.cfg`:
+
+```cfg
+premium_chat_tag       "{gold}[VIP]{default}"
+premium_trial_chat_tag "{aqua}[Guest]{default}"
+```
+
+Use `premium_tag_styles "0"` if everyone should keep your chosen colours. Apply the file with `exec sourcemod/premium_rebuilt.cfg`. See [custom chat tags](docs/wiki/Configuration.md#custom-chat-tags) for more examples and the saved-menu settings note.
+
 ## Credits and licence
 
 Original concept: **daneleo and noodleboy347**. See [LICENSE.txt](LICENSE.txt) and [THIRD-PARTY.txt](THIRD-PARTY.txt) for the licence and dependency credits. TF2Attributes and More Colors come from their original authors and are not bundled as separate downloads in this repository.

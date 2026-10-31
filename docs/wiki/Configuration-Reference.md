@@ -172,6 +172,13 @@ Saved-location teleport is separate from Engineer teleporter buildings.
 Normal player-chat tags are automatic for members/active trials only.
 Individual free grants and feature rentals do not give a chat tag.
 premium_tag below is the plugin's system-message prefix.
+Choose any tag wording and More Colors names, ending with {default}.
+Member example: `premium_chat_tag "{gold}[VIP]{default}"`
+Trial example: `premium_trial_chat_tag "{aqua}[Guest]{default}"`
+Set `premium_tag_styles "0"` to keep your chosen colours for everyone.
+Apply edits with: `exec sourcemod/premium_rebuilt.cfg`
+
+See [custom chat tags](Configuration.md#custom-chat-tags) for more examples and how to avoid a saved admin-menu setting overriding your choice.
 
 | Setting | Default | Bounds | Meaning |
 | --- | --- | --- | --- |
