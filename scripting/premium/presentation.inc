@@ -2,7 +2,6 @@ void ResetPresentation(int client) { StopTurretTooltip(client); }
 void RefreshEngineerHud(int client) { RefreshTurretTooltip(client); }
 
 int TooltipAnnotationId(int client) { return 0x50520000 + client; }
-float TooltipHostClock() { return GetEngineTime(); }
 
 int TooltipHostTarget(int client)
 {
@@ -22,19 +21,18 @@ void TooltipHostText(int client, int reference, char[] text, int size)
     int kind = OwnedUtilityKind(client, reference);
     if (kind >= 0)
     {
-        FormatEx(text, size, "%s: %d/%d | Buildings: %d/6", kind == 0 ? "Dispensers" : (kind == 1 ? "Entrances" : "Exits"),
-            CountUtilities(client, kind), UtilityLimit(client, kind), CountOwnedBuildings(client, false));
+        PremiumUtilityTooltip(kind, CountUtilities(client, kind), UtilityLimit(client, kind), CountOwnedBuildings(client, false), text, size);
         return;
     }
     int cap = ExtraSentryAllowed(client) ? cvSentryLimit.IntValue : 1;
     char role[32];
     if (cvSentryLabels.BoolValue)
     {
-        if (!IsBonusSentry(client, target)) strcopy(role, sizeof(role), "Primary | ");
+        if (!IsBonusSentry(client, target)) strcopy(role, sizeof(role), "Primary");
         else for (int slot; slot < 3; slot++) if (g_ExtraSentries[client][slot] == reference)
-            FormatEx(role, sizeof(role), "Extra %d (L1) | ", slot + 1);
+            FormatEx(role, sizeof(role), "Extra %d (L1)", slot + 1);
     }
-    FormatEx(text, size, "%s%d/%d sentries | Buildings: %d/6", role, CountOwnedBuildings(client), cap, CountOwnedBuildings(client, false));
+    PremiumSentryTooltip(role, CountOwnedBuildings(client), cap, CountOwnedBuildings(client, false), text, size);
 }
 
 bool TooltipHostShow(int client, int reference, const char[] text)
@@ -48,7 +46,9 @@ bool TooltipHostShow(int client, int reference, const char[] text)
     event.SetString("text", text);
     event.SetInt("follow_entindex", target);
     event.SetFloat("worldPosX", origin[0]); event.SetFloat("worldPosY", origin[1]); event.SetFloat("worldPosZ", origin[2] + 66.0);
-    event.SetFloat("lifetime", 2.0);
+    // Negative lifetime is native persistent mode. Explicit hide events own
+    // cleanup; repeated show events would restart the client's slide-in.
+    event.SetFloat("lifetime", -1.0);
     // Only this owner receives the event. No 32-bit client visibility mask,
     // so client slots above 31 work without shifting/overflowing a bitfield.
     event.SetInt("visibilityBitfield", 0);

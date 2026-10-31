@@ -39,6 +39,8 @@ Teleporters use native available unmatched ends. They are not three numbered sel
 
 With `premium_engineer_hud 1`, aiming at your building within range shows a small native annotation. `premium_sentry_labels 1` includes primary/extra sentry labels. Player tooltip preferences are in `!premium_options`.
 
+RC18 keeps that annotation attached without repeatedly restarting its slide-in. Labels use shorter lines; `Total 3/6` means three of your six shared building slots are occupied.
+
 The existing native health/upgrade panel cannot accept a custom text line from this server plugin. The annotation is separate; the large screen overlay is not used.
 
 ## Why the build menu sometimes pauses

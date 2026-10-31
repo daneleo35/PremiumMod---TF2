@@ -243,7 +243,11 @@ public void EventRoundStart(Event event, const char[] name, bool dontBroadcast)
     StopCelebrations();
     ApplyPendingProfile();
     g_RoundActive = true;
-    for (int client = 1; client <= MaxClients; client++) g_Player[client].saved = false;
+    for (int client = 1; client <= MaxClients; client++)
+    {
+        g_Player[client].saved = false;
+        StopTurretTooltip(client); // Round HUD resets may have discarded the client annotation.
+    }
 }
 
 public void EventRoundEnd(Event event, const char[] name, bool dontBroadcast)

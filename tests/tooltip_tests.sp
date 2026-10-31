@@ -3,12 +3,10 @@
 #include <sourcemod>
 int g_Target[MAXPLAYERS + 1], g_Shows[MAXPLAYERS + 1], g_Hides[MAXPLAYERS + 1];
 char g_Text[MAXPLAYERS + 1][96];
-float g_Clock = 100.0;
 bool g_ShowWorks = true;
 int g_Checks;
 #include "../scripting/premium/tooltip.inc"
 int TooltipHostTarget(int client) { return g_Target[client]; }
-float TooltipHostClock() { return g_Clock; }
 void TooltipHostText(int client, int target, char[] text, int size)
 {
     if (target == INVALID_ENT_REFERENCE) ThrowError("invalid tooltip target");
@@ -36,12 +34,14 @@ public int main()
     RefreshTurretTooltip(1);
     Check(g_Shows[1] == 1 && g_Tooltip[1].shown, "looking at a valid own turret creates one tooltip");
     RefreshTurretTooltip(1); Check(g_Shows[1] == 1, "unchanged tooltip is not resent each heartbeat");
-    g_Clock = 100.74; RefreshTurretTooltip(1); Check(g_Shows[1] == 1, "refresh throttled before deadline");
-    g_Clock = 100.75; RefreshTurretTooltip(1); Check(g_Shows[1] == 2, "bounded native lifetime refreshed before expiry");
+    RefreshTurretTooltip(1); Check(g_Shows[1] == 1, "unchanged state never refreshes the native animation");
+    RefreshTurretTooltip(1); Check(g_Shows[1] == 1, "further heartbeats cannot restart the native animation");
+    for (int tick; tick < 240; tick++) RefreshTurretTooltip(1);
+    Check(g_Shows[1] == 1, "a minute of steady aim sends no further show events");
     strcopy(g_Text[1], sizeof(g_Text[]), "Primary | 3/3 sentries"); RefreshTurretTooltip(1);
-    Check(g_Shows[1] == 3 && StrContains(g_Tooltip[1].text, "3/3") >= 0, "counter change updates immediately");
+    Check(g_Shows[1] == 2 && StrContains(g_Tooltip[1].text, "3/3") >= 0, "counter change updates immediately");
     g_Target[1] = 4137; strcopy(g_Text[1], sizeof(g_Text[]), "Extra 1 (L1) | 3/3 sentries"); RefreshTurretTooltip(1);
-    Check(g_Shows[1] == 4 && g_Tooltip[1].target == 4137, "aim switch reuses one annotation with new target and role");
+    Check(g_Shows[1] == 3 && g_Tooltip[1].target == 4137, "aim switch reuses one annotation with new target and role");
     g_Target[1] = INVALID_ENT_REFERENCE; RefreshTurretTooltip(1);
     Check(!g_Tooltip[1].shown && g_Hides[1] == 1, "look away, obstruction or access/feature loss hides the tooltip");
     StopTurretTooltip(1); Check(g_Hides[1] == 1, "repeated cleanup cannot duplicate hide events");
@@ -59,6 +59,20 @@ public int main()
         Check(!g_Tooltip[client].shown && g_Hides[client] == 1, "high-slot cleanup is safe without a visibility bitmask");
     }
     StopTurretTooltip(1); Check(!g_Tooltip[1].shown && !g_Tooltip[1].text[0], "session/map/unload cleanup clears tooltip state");
+    RefreshTurretTooltip(1); Check(g_Tooltip[1].shown, "explicit HUD reset allows the same target/text to be shown again");
+    char compact[96];
+    PremiumSentryTooltip("Extra 1 (L1)", 2, 3, 3, compact, sizeof(compact));
+    Check(StrEqual(compact, "Extra 1 (L1)\nSentries 2/3 | Total 3/6"), "extra sentry uses compact two-line label");
+    PremiumSentryTooltip("Primary", 1, 3, 4, compact, sizeof(compact));
+    Check(StrEqual(compact, "Primary\nSentries 1/3 | Total 4/6"), "primary role and counts retained");
+    PremiumSentryTooltip("", 2, 3, 6, compact, sizeof(compact));
+    Check(StrEqual(compact, "Sentries 2/3 | Total 6/6"), "hidden role leaves no empty line");
+    PremiumUtilityTooltip(0, 2, 3, 5, compact, sizeof(compact));
+    Check(StrEqual(compact, "Dispensers 2/3\nTotal 5/6"), "compact dispenser label");
+    PremiumUtilityTooltip(1, 2, 3, 5, compact, sizeof(compact));
+    Check(StrEqual(compact, "Entrances 2/3\nTotal 5/6"), "compact entrance label");
+    PremiumUtilityTooltip(2, 1, 3, 5, compact, sizeof(compact));
+    Check(StrEqual(compact, "Exits 1/3\nTotal 5/6"), "compact exit label");
     PrintToServer("PASS: %d turret tooltip assertions", g_Checks);
     return g_Checks;
 }

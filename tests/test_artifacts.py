@@ -180,7 +180,11 @@ class ArtifactChecks(unittest.TestCase):
         self.assertIn('event.SetInt("follow_entindex", target)', source)
         self.assertEqual(source.count('event.FireToClient(client); event.Cancel();'), 2)
         self.assertIn('event.SetInt("visibilityBitfield", 0)', source)
-        self.assertIn('event.SetFloat("lifetime", 2.0)', source)
+        self.assertIn('event.SetFloat("lifetime", -1.0)', source)
+        controller = (ROOT/'scripting/premium/tooltip.inc').read_text()
+        self.assertNotIn('refreshAt', controller)
+        self.assertNotIn('TooltipHostClock()', controller)
+        self.assertIn('StopTurretTooltip(client)', (ROOT/'scripting/premium/effects.inc').read_text().split('public void EventRoundStart(', 1)[1].split('public void EventRoundEnd(', 1)[0])
         self.assertIn('GetClientAimTarget(client, false)', source)
         self.assertIn('PlacedSentry(client, target)', source)
         self.assertNotIn('CreateEntityByName(', source)
@@ -223,7 +227,7 @@ class ArtifactChecks(unittest.TestCase):
         self.assertIn('BuildingPlacementBlocked(client)', effects)
         presentation = (ROOT/'scripting/premium/presentation.inc').read_text()
         self.assertIn('All buildings: %d/6 slots', presentation)
-        self.assertIn('Buildings: %d/6', presentation)
+        self.assertIn('Total %d/6', (ROOT/'scripting/premium/tooltip.inc').read_text())
 
     def test_independent_grants_do_not_change_membership_or_chat_tags(self):
         runtime = (ROOT/'scripting/premium/feature_runtime.inc').read_text()
