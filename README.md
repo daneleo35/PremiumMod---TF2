@@ -2,7 +2,7 @@
 
 A configurable SourceMod plugin for TF2 servers. Give players a configured Premium bundle, grant selected features free, or optionally let players earn points and rent individual features or buy limited Premium trials.
 
-**Current version: 3.0.0-rc13 — release candidate.** The local build passed 2,943 SourcePawn assertions and 60 Python/SQLite checks. Live TF2, native filesystem/callback recovery and real MySQL acceptance are still required; these checks are not a promise of bug-free gameplay.
+**Current version: 3.0.0-rc13
 
 ## Documentation
 
@@ -35,7 +35,7 @@ Start with the [documentation home](docs/wiki/Home.md). The same pages are prepa
 - Optional play-time points, private award notices, configurable rental prices/durations and lifetime limits on purchased Premium trials.
 - SQLite by default, optional MySQL, asynchronous operations and durable receipt tokens for points settlement.
 
-All access still obeys the configured enable settings, permissions, class/map/team rules, cooldowns and balance limits. Nothing requires modified TF2 game DLLs/SOs.
+All access still obeys the configured enable settings, permissions, class/map/team rules, cooldowns and balance limits.
 
 ## Quick start: build and install
 
@@ -51,10 +51,11 @@ python build.py
 The bootstrap downloads pinned compiler/headers into ignored local folders. It does not install server dependencies. The build creates an install ZIP and a separate source ZIP in `dist/`.
 
 1. Install SourceMod with SDKTools, SDKHooks, Regex and Client Preferences available. The pinned release compiler is SourcePawn **1.12.0.7259**.
-2. Install [TF2Attributes](https://github.com/FlaminSarge/tf2attributes/releases/tag/v1.7.5.1) separately, including its matching gamedata.
-3. Extract the built install ZIP into the server's `tf/` directory. Disable the old Premium plugin first and preserve existing custom configuration/database files.
-4. Review `tf/cfg/sourcemod/premium_rebuilt.cfg` and the three companion configs under `tf/addons/sourcemod/configs/`.
-5. Restart/change map, check `sm plugins list` and the SourceMod error log, and test with both an ordinary account and a configured member.
+2. install [Morecolors](https://github.com/DoctorMcKay/sourcemod-plugins/blob/master/scripting/include/morecolors.inc) 
+3. Install [TF2Attributes](https://github.com/FlaminSarge/tf2attributes/releases/tag/v1.7.5.1) separately, including its matching gamedata.
+4. Extract the built install ZIP into the server's `tf/` directory. Disable the old Premium plugin first and preserve existing custom configuration/database files.
+5. Review `tf/cfg/sourcemod/premium_rebuilt.cfg` and the three companion configs under `tf/addons/sourcemod/configs/`.
+6. Restart/change map, check `sm plugins list` and the SourceMod error log, and test with both an ordinary account and a configured member.
 
 [Full installation paths, dependencies and upgrade steps →](docs/wiki/Installation.md)
 
@@ -93,7 +94,7 @@ Edit prices/durations in `premium_shop.cfg`. Players use `!premium_points` / `!p
 
 Start with `!premium`, `!premium_features`, `!premium_benefits` and `!premium_options`. Available commands include `!glow`, `!colorme`, `!premium_fov`, `!swapteam`, `!save_loc` and `!load_loc` when access/settings permit.
 
-Tags apply automatically in normal chat. `sm_premium_chat` is only a diagnostic command, never an activation step.
+Tags apply automatically in normal chat.
 
 [Full player/admin command reference →](docs/wiki/Commands.md)
 
