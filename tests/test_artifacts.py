@@ -352,7 +352,7 @@ class ArtifactChecks(unittest.TestCase):
             self.assertRegex(source, rf'PublicCommand\("{name}",\s*\w+\)')
         for name in admin:
             self.assertRegex(source, rf'AdminCommand\("{name}",\s*\w+\)')
-        self.assertIn('menu.AddItem("glow"', source)
+        self.assertIn('menu.AddItem("glow"', (ROOT/'scripting/premium/ui.inc').read_text())
 
     def test_glow_is_wired_to_each_ownership_cleanup_boundary(self):
         main = (ROOT/'scripting/premium.sp').read_text()

@@ -121,6 +121,7 @@ void CreateConfiguration()
 
 public void ConfigurationChanged(ConVar setting, const char[] oldValue, const char[] newValue)
 {
+    g_UiSettingsRevision++;
     if (setting == cvAmmo && cvLegacyClip != null) PremiumSyncAmmoAlias(cvAmmo, cvLegacyClip);
     else if (setting == cvLegacyClip && cvAmmo != null) PremiumSyncAmmoAlias(cvLegacyClip, cvAmmo);
     if (setting == cvMySQL || setting == cvDatabase) g_BackendChanged = true;

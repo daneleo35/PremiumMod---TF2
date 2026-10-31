@@ -1,1 +1,1 @@
-Premium Mod 3.0.0-rc13 · Release candidate; live TF2 server testing required. [Home](Home.md) · [Source and license](https://github.com/daneleo35/PremiumMod---TF2) · [Report an issue](https://github.com/daneleo35/PremiumMod---TF2/issues)
+Premium Mod 3.0.0-rc14 · [Home](Home.md) · [Source](https://github.com/daneleo35/PremiumMod---TF2) · [Report an issue](https://github.com/daneleo35/PremiumMod---TF2/issues)

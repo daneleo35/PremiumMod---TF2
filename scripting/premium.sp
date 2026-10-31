@@ -25,7 +25,7 @@
 #endif
 #include "premium/core.inc"
 
-#define VERSION "3.0.0-rc13"
+#define VERSION "3.0.0-rc14"
 #define STEAM_LENGTH 32
 #define MEMBER_TABLE "premium_v3_members"
 #define TRIAL_TABLE "premium_v3_trials"
@@ -113,6 +113,7 @@ ConVar cvTeamSentries, cvEngineerHud, cvSentryLabels, cvReminders, cvTagStyles, 
 ConVar cvCelebration, cvCelebrationSeconds, cvCelebrationBudget;
 ConVar cvAirblast, cvAirblastForce, cvAirblastLift, cvAirblastCap, cvAirblastCooldown;
 
+int g_UiSettingsRevision;
 #include "premium/economy_state.inc"
 #include "premium/feature_access.inc"
 #include "premium/options.inc"
@@ -138,6 +139,9 @@ ConVar cvAirblast, cvAirblastForce, cvAirblastLift, cvAirblastCap, cvAirblastCoo
 #include "premium/chat.inc"
 #include "premium/tooltip.inc"
 #include "premium/presentation.inc"
+#include "premium/ui.inc"
+#include "premium/ui_shop.inc"
+#include "premium/ui_settings.inc"
 
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int maximum)
 {

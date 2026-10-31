@@ -17,6 +17,7 @@ void AdminCommand(const char[] name, ConCmd callback)
 void RegisterCommands()
 {
     PublicCommand("premium", CommandMenu);
+    AdminCommand("premium_admin", CommandAdminMenu);
     PublicCommand("premium_points", CommandPoints);
     PublicCommand("premium_shop", CommandPointsShop);
     if (!CommandExists("sm_points") && !CommandExists("points")) PublicCommand("points", CommandPoints);
@@ -65,31 +66,7 @@ public Action CommandMenu(int client, int args)
 
 void DisplayFeatures(int client)
 {
-    Menu menu = new Menu(FeatureSelected);
-    char label[192];
-    FormatEx(label, sizeof(label), "%T", "Menu Title", client);
-    menu.SetTitle(label);
-    FormatEx(label, sizeof(label), "%T", "Menu Status", client);
-    menu.AddItem("status", label);
-    menu.AddItem("options", "My preferences");
-    menu.AddItem("features", "My feature access");
-    if (cvPoints.BoolValue && cvPointsShop.BoolValue) menu.AddItem("shop", "Points shop");
-    menu.AddItem("swapstatus", "Team swap availability");
-    FormatEx(label, sizeof(label), "%T", "Menu Benefits", client);
-    menu.AddItem("benefits", label);
-    FormatEx(label, sizeof(label), "%T", "Menu Trial", client);
-    bool available = cvEnable.BoolValue && cvTrial.BoolValue && g_DatabaseReady
-        && g_Player[client].loaded && !g_Player[client].usedTrial && !HasPremium(client);
-    menu.AddItem("trial", label, available ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED);
-    FormatEx(label, sizeof(label), "%T", "Menu Dark", client);
-    menu.AddItem("dark", label, HasFeature(client, Feature_Dark) && cvDark.BoolValue ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED);
-    FormatEx(label, sizeof(label), "%T", "Menu Glow", client);
-    menu.AddItem("glow", label, HasFeature(client, Feature_Glow) && cvGlow.BoolValue ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED);
-    FormatEx(label, sizeof(label), "%T", "Menu Save", client);
-    menu.AddItem("save", label, GameplayFeatureAllowed(client, Feature_Teleport) && TeleportEnabled(client) ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED);
-    FormatEx(label, sizeof(label), "%T", "Menu Load", client);
-    menu.AddItem("load", label, GameplayFeatureAllowed(client, Feature_Teleport) && TeleportEnabled(client) && g_Player[client].saved ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED);
-    menu.Display(client, 30);
+    UiHome(client);
 }
 
 public int FeatureSelected(Menu menu, MenuAction action, int client, int selection)

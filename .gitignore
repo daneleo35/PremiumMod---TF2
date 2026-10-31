@@ -12,3 +12,5 @@ tests/tmp/
 **/__pycache__/
 scripting/include/morecolors.inc
 scripting/include/tf2attributes.inc
+*.cfg.menu-new
+*.cfg.menu-bak

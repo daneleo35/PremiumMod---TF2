@@ -4,7 +4,7 @@ Give players extra TF2 features, choose who gets them, and keep the balance in y
 
 Give members a Premium package, make a few features free for everyone, or let players earn points and spend them in a shop. You choose the bonuses, prices, time limits and restrictions. Points are optional.
 
-**Current version: 3.0.0-rc13**
+**Current version: 3.0.0-rc14**
 
 ## What can it do?
 
@@ -28,6 +28,7 @@ Start with the [Wiki](https://github.com/daneleo35/PremiumMod---TF2/wiki). A cop
 | Get it running | [Installation](docs/wiki/Installation.md) |
 | Understand who gets what | [How it works](docs/wiki/How-It-Works.md) |
 | Know what players can type | [Player guide](docs/wiki/Player-Guide.md) |
+| Use the player, shop and admin menus | [In-game menus](docs/wiki/In-Game-Menus.md) |
 | Look up a command | [Commands](docs/wiki/Commands.md) |
 | Change the settings | [Configuration](docs/wiki/Configuration.md) |
 | Give free features or manage trials | [Access and trials](docs/wiki/Access-and-Trials.md) |
@@ -108,7 +109,9 @@ Points and points-bought trials start **off**. Free trials start **on**, lasting
 
 ## For players
 
-Type `!premium` to open the menu. Use `!premium_benefits` to see what you actually get and `!premium_options` to change your personal options.
+Type `!premium` to open the menu. It shows your status and points, with separate screens for bonuses, unlocked features, appearance, purchases, actions and personal settings. Admins can open `!premium_admin` to manage players and server settings through the menus.
+
+The shop groups offers by category and shows the price, length, remaining balance and any reason you cannot buy. Admin changes have confirmation screens; settings can be applied live and explicitly saved to the main config with a backup.
 
 Premium and Trial tags appear automatically in normal chat.
 

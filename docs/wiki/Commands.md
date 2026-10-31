@@ -7,6 +7,7 @@ Player examples use `!name` in chat. Their console forms are `sm_name`; standard
 | Chat command | Use |
 | --- | --- |
 | `!premium` | Main menu |
+| `!premium_admin` | Admin menu for authorised admins; ordinary players cannot open it |
 | `!premium_status` | Membership and remaining free/purchased trial information |
 | `!premium_features` | Paged list of your feature access; permission does not override balance/map settings |
 | `!premium_benefits` | Actual configured bonuses, held resources and building counts for your current class/team |
@@ -44,6 +45,8 @@ These commands do not create access. The corresponding feature grant/membership,
 | `sm_premium_flight` | Weapon/item/state, fuel, movement, configured flight and airblast diagnostics |
 
 ## Membership and free trials
+
+Most common admin actions are also available through `!premium_admin`: select players, manage membership/free features/points, choose presets and change/save numeric settings. See [In-game menus](In-Game-Menus.md).
 
 | Server/admin command | Behaviour |
 | --- | --- |

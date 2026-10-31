@@ -4,7 +4,7 @@ Premium Mod lets you choose extra features for your TF2 server and decide who ca
 
 You decide how generous it is. Keep it mostly cosmetic, add small bonuses, or turn up the settings for a fun server.
 
-This guide covers **3.0.0-rc13**, a test release. Automated checks have passed; real-server testing is still needed.
+This guide covers **3.0.0-rc14**.
 
 ## Where to start
 
@@ -13,6 +13,7 @@ This guide covers **3.0.0-rc13**, a test release. Automated checks have passed; 
 | Install it on my server | [Installation](Installation.md) |
 | Understand who gets which features | [How it works](How-It-Works.md) |
 | Find out what to type as a player | [Player guide](Player-Guide.md) |
+| Use the player, shop and admin menus | [In-game menus](In-Game-Menus.md) |
 | Look up player and admin commands | [Commands](Commands.md) |
 | Change the settings | [Configuration](Configuration.md) |
 | Give free features or set up trials | [Access and trials](Access-and-Trials.md) |

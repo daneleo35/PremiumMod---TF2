@@ -152,3 +152,4 @@ if __name__ == '__main__':
     run('features_tests.smx', 380)
 
     run('economy_tests.smx', 200)
+    run('ui_tests.smx', 40)

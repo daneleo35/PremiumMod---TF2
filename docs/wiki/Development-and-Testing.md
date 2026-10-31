@@ -28,7 +28,9 @@ The pinned local test dependency is `pysmx==0.4.0`. The full suite compiles test
 
 The RC13 validation baseline is **2,943 SourcePawn assertions and 60 Python checks**, including 17 real SQLite economy integration tests. The SQLite suite executes queries produced by the production SourcePawn query builder and checks transaction/replay behaviour. These counts describe that validation run, not proof that every engine behaviour works.
 
-**Not exercised by that suite:** a running TF2 server on either OS, real MySQL, native SourceMod disk failure/replacement handling or callback interruption/recovery. The plugin remains a release candidate requiring server acceptance testing.
+**Not exercised by that suite:** a running TF2 server on either OS, real MySQL, native SourceMod disk failure/replacement handling or callback interruption/recovery. The automated checks and live-server checks cover different parts of the plugin.
+
+RC14 adds the [in-game menus](In-Game-Menus.md), 49 SourcePawn checks for menu safety/formatting and three Python checks for catalog coverage, admin routing and purchase confirmation. The combined suite contains 2,992 SourcePawn assertions and 63 Python checks. The detailed menu acceptance sequence is in [RC14_SERVER_TEST.md](https://github.com/daneleo35/PremiumMod---TF2/blob/main/docs/RC14_SERVER_TEST.md).
 
 ## Server acceptance checklist
 

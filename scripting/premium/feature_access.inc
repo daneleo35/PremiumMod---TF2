@@ -152,16 +152,7 @@ public Action CommandFeatureList(int client, int args)
 {
     if (ValidClient(client))
     {
-        RefreshClient(client);
-        Menu menu = new Menu(FeatureAccessSelected);
-        menu.SetTitle("Feature access | Premium: %s\nBalance and map/team rules still apply", HasPremium(client) ? "active" : "inactive");
-        for (int i; i < view_as<int>(Feature_Count); i++)
-        {
-            char label[96]; FormatEx(label, sizeof(label), "%s: %s%s", g_FeatureKeys[i], HasFeature(client, view_as<PremiumFeature>(i)) ? "granted" : "no access",
-                (g_PublicFeatures & (1 << i)) ? " (public)" : "");
-            menu.AddItem("info", label, ITEMDRAW_DISABLED);
-        }
-        menu.ExitBackButton = true; menu.Display(client, 30);
+        UiFeatures(client);
         return Plugin_Handled;
     }
     Tell(client, "Feature keys (access does not bypass balance, team, class, map or enable settings):");

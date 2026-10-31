@@ -4,6 +4,7 @@
 - [Installation](Installation.md)
 - [How it works](How-It-Works.md)
 - [Player guide](Player-Guide.md)
+- [In-game menus](In-Game-Menus.md)
 - [Commands](Commands.md)
 - [Configuration](Configuration.md)
 - [All settings](Configuration-Reference.md)

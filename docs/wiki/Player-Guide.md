@@ -2,6 +2,8 @@
 
 Start with **`!premium`** in normal game chat. Standard SourceMod chat triggers apply; console forms begin with `sm_`.
 
+Use the [in-game menus](In-Game-Menus.md) for appearance choices, actions, shop purchases and personal settings.
+
 ## Find out what you can use
 
 - `!premium_status` — membership/trial status.

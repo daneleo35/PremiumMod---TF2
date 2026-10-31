@@ -10,7 +10,7 @@ import sys
 import zipfile
 
 ROOT = Path(__file__).resolve().parent
-VERSION = '3.0.0-rc13'
+VERSION = '3.0.0-rc14'
 EXTERNAL_HEADERS = {'morecolors.inc', 'tf2attributes.inc'}
 
 
@@ -31,6 +31,7 @@ def check_build_dependencies(root, compiler_root):
 def compile_source(compiler, source, output, includes):
     command = [str(compiler), str(source), f'-o{output}', '-E']
     command += [f'-i{include}' for include in includes]
+    command += [f'-i{source.parent}']
     result = subprocess.run(command, cwd=ROOT, text=True, capture_output=True)
     print(result.stdout, end='')
     if result.stderr: print(result.stderr, file=sys.stderr, end='')
@@ -81,6 +82,8 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--test', action='store_true', help='Run policy VM, SQLite integration, and artifact checks')
     arguments = parser.parse_args()
+    from tools.prepare_ui import generate
+    generate()
     compiler_root = ROOT/'tools/sourcemod/addons/sourcemod/scripting'
     compiler = compiler_root/'spcomp64.exe'
     if not compiler.exists():
@@ -111,7 +114,7 @@ def main():
                        [libs/'smx/include'])
         compile_source(test_compiler, ROOT/'tests/ammo_tests.sp', ROOT/'tests/ammo_tests.smx',
                        [libs/'smx/include'])
-        for name in ('options', 'celebrations', 'airblast', 'chat', 'tooltip', 'features', 'economy'):
+        for name in ('options', 'celebrations', 'airblast', 'chat', 'tooltip', 'features', 'economy', 'ui'):
             compile_source(test_compiler, ROOT/f'tests/{name}_tests.sp', ROOT/f'tests/{name}_tests.smx', [libs/'smx/include'])
         compile_source(test_compiler, ROOT/'tests/economy_queries.sp', ROOT/'tests/economy_queries.smx', [libs/'smx/include'])
         policy = subprocess.run([sys.executable, 'tests/run_policy.py'], cwd=ROOT, text=True, capture_output=True)
@@ -127,7 +130,7 @@ def main():
                            sentry_assertions=checks['sentry ownership'], ammo_assertions=checks['reserve ammo'],
                            options_assertions=checks['preferences and rules'], celebration_assertions=checks['celebration ownership'],
                            airblast_assertions=checks['airblast boost'], chat_assertions=checks['native chat tag'],
-                           tooltip_assertions=checks['turret tooltip'], feature_assertions=checks['independent feature access'], economy_assertions=checks['points economy policy'],
+                           tooltip_assertions=checks['turret tooltip'], feature_assertions=checks['independent feature access'], economy_assertions=checks['points economy policy'], ui_assertions=checks['in-game UI safety'],
                            sqlite_tests=len(re.findall(r'\(test_storage\.', python_tests.stderr)),
                            artifact_tests=len(re.findall(r'\(test_artifacts\.', python_tests.stderr)),
                            economy_tests=len(re.findall(r'\(test_economy\.', python_tests.stderr)),
@@ -149,10 +152,10 @@ def main():
             members['addons/sourcemod/scripting/' + source.relative_to(ROOT/'scripting').as_posix()] = source
     for name in ('README.md', 'LICENSE.txt', 'THIRD-PARTY.txt'):
         members[name] = ROOT/name
-    for source in (ROOT/'docs').glob('*.md'): members['docs/' + source.name] = source
+    for source in (ROOT/'docs').rglob('*.md'): members['docs/' + source.relative_to(ROOT/'docs').as_posix()] = source
     members['configs/premium-databases.example.txt'] = ROOT/'configs/premium-databases.example.txt'
     # Include a self-contained source tree with the bootstrap/build/test scripts.
-    development = ['build.py', '.gitignore', 'README.md', 'LICENSE.txt', 'THIRD-PARTY.txt', 'tools/bootstrap.py', 'tools/config_layout.py',
+    development = ['build.py', '.gitignore', 'README.md', 'LICENSE.txt', 'THIRD-PARTY.txt', 'tools/bootstrap.py', 'tools/config_layout.py', 'tools/prepare_ui.py',
                    'configs/premium-databases.example.txt', 'configs/premium_rebuilt.cfg', 'configs/premium_rules.cfg', 'configs/premium_features.cfg', 'configs/premium_shop.cfg']
     for directory in ('scripting', 'translations', 'docs', 'tests'):
         development += [p.relative_to(ROOT).as_posix() for p in (ROOT/directory).rglob('*')

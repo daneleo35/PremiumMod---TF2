@@ -131,20 +131,7 @@ bool ShopCanBuy(int client, int index, char[] reason, int size)
 
 void DisplayPointsShop(int client)
 {
-    if (!EconomyAvailable(client)) return;
-    if (!cvPointsShop.BoolValue || !g_ShopValid) { Tell(client, "%t", "Feature Disabled"); return; }
-    Menu menu = new Menu(PointsShopSelected); menu.SetTitle("Points shop | Balance: %d\nRentals start on settlement; offline time counts", g_Economy[client].points);
-    int shown;
-    for (int i; i < g_ShopCount; i++)
-    {
-        if (g_ShopOffers[i].feature < 0 ? !cvPointsTrials.BoolValue : !cvPointsRentals.BoolValue) continue;
-        shown++;
-        char data[64], label[192]; FormatEx(data, sizeof(data), "%d:%d", g_ShopRevision, i);
-        FormatEx(label, sizeof(label), "%s — %d points / %d minutes", g_ShopOffers[i].name, g_ShopOffers[i].price, g_ShopOffers[i].duration / 60);
-        menu.AddItem(data, label);
-    }
-    if (!shown) menu.AddItem("empty", "No offers configured", ITEMDRAW_DISABLED);
-    menu.ExitBackButton = true; menu.Display(client, 30);
+    UiShopHome(client);
 }
 
 bool ShopMenuItem(Menu menu, int selection, int &index)
@@ -157,35 +144,46 @@ bool ShopMenuItem(Menu menu, int selection, int &index)
 public int PointsShopSelected(Menu menu, MenuAction action, int client, int selection)
 {
     if (action == MenuAction_End) delete menu;
-    else if (action == MenuAction_Cancel && selection == MenuCancel_ExitBack && ValidClient(client)) DisplayFeatures(client);
+    else if (action == MenuAction_Cancel && selection == MenuCancel_ExitBack && ValidClient(client)) UiShopHome(client);
     else if (action == MenuAction_Select && EconomyAvailable(client))
     {
-        int index; char reason[192];
-        if (!ShopMenuItem(menu, selection, index)) { Tell(client, "Shop changed; reopen !premium_shop for a fresh quote."); return 0; }
-        if (!ShopCanBuy(client, index, reason, sizeof(reason))) { Tell(client, "%s", reason); return 0; }
+        int index; char reason[192], time[32];
+        if (!ShopMenuItem(menu, selection, index)) { Tell(client, "The shop changed. Please choose the offer again."); UiShopHome(client); return 0; }
+        bool available = ShopCanBuy(client, index, reason, sizeof(reason));
+        PremiumUiDuration(g_ShopOffers[index].duration, time, sizeof(time));
         Menu confirm = new Menu(PointsPurchaseSelected);
-        confirm.SetTitle("Buy %s?\n%d points; %d minutes; offline time counts%s", g_ShopOffers[index].name, g_ShopOffers[index].price,
-            g_ShopOffers[index].duration / 60, g_ShopOffers[index].feature < 0 ? "\nPremium trial: full configured perks + Trial tag" : "\nIndividual feature only; no Premium tag");
-        char data[64]; FormatEx(data, sizeof(data), "%d:%d", g_ShopRevision, index); confirm.AddItem(data, "Confirm purchase"); confirm.AddItem("cancel", "Cancel"); confirm.Display(client, 30);
+        confirm.SetTitle("%s\nPrice: %d points | Length: %s\nYour balance: %d points\nOffline time counts\n%s\n ",
+            g_ShopOffers[index].name, g_ShopOffers[index].price, time, g_Economy[client].points,
+            g_ShopOffers[index].feature < 0 ? "Full Premium package + Trial tag" : "This feature only; no Premium tag");
+        char data[64]; FormatEx(data, sizeof(data), "%d:%d", g_ShopRevision, index);
+        if (!available) confirm.AddItem("info", reason, ITEMDRAW_DISABLED);
+        else { char after[64]; FormatEx(after, sizeof(after), "Balance afterwards: %d points", g_Economy[client].points - g_ShopOffers[index].price); confirm.AddItem("info", after, ITEMDRAW_DISABLED); }
+        confirm.AddItem(data, "Confirm purchase", available ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED);
+        confirm.AddItem("cancel", "Back to shop"); confirm.ExitBackButton = true; confirm.Display(client, 30);
     }
     return 0;
 }
 public int PointsPurchaseSelected(Menu menu, MenuAction action, int client, int selection)
 {
     if (action == MenuAction_End) delete menu;
-    else if (action == MenuAction_Select && selection == 0 && EconomyAvailable(client))
+    else if (action == MenuAction_Cancel && selection == MenuCancel_ExitBack && ValidClient(client)) UiShopHome(client);
+    else if (action == MenuAction_Select && EconomyAvailable(client))
     {
+        char data[64]; menu.GetItem(selection, data, sizeof(data));
+        if (StrEqual(data, "cancel")) { UiShopHome(client); return 0; }
         int index; char reason[192];
-        if (!ShopMenuItem(menu, selection, index)) { Tell(client, "Shop changed; nothing purchased. Reopen the shop."); return 0; }
-        if (!ShopCanBuy(client, index, reason, sizeof(reason))) { Tell(client, "%s", reason); return 0; }
+        if (!ShopMenuItem(menu, selection, index)) { Tell(client, "The shop changed. Nothing purchased; please choose again."); UiShopHome(client); return 0; }
+        if (!ShopCanBuy(client, index, reason, sizeof(reason))) { Tell(client, "%s", reason); UiShopHome(client); return 0; }
         ShopOffer offer; offer = g_ShopOffers[index]; EconomyOperation op;
         NewEconomyOperation(op, offer.feature < 0 ? Economy_Trial : Economy_Rent, g_Economy[client].steam);
         op.feature = offer.feature; op.price = offer.price; op.duration = offer.duration; op.buyerSerial = GetClientSerial(client);
         if (!QueueEconomyOperation(op)) { Tell(client, "%t", "Points Pending"); return 0; }
-        g_Economy[client].purchasing = true; Tell(client, "Purchase queued at the confirmed price. It is granted only after the database settles it."); ProcessEconomyOutbox();
+        g_Economy[client].purchasing = true; Tell(client, "Saving your purchase... Check My purchases shortly."); ProcessEconomyOutbox();
+        UiWallet(client);
     }
     return 0;
 }
+
 public Action CommandPointsShop(int client, int args) { DisplayPointsShop(client); return Plugin_Handled; }
 public Action CommandPoints(int client, int args)
 {

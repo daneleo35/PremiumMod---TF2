@@ -2,6 +2,8 @@
 
 The bundled main config has numbered sections, aligned values and short comments. Switches normally use `0` for off and `1` for on; exceptions are labelled. Keep quoted values and setting names intact.
 
+You can also edit 91 numeric settings through `!premium_admin` → Server settings. Apply changes live, then explicitly Save to keep them. The saved block runs last in the main file; see [In-game menus](In-Game-Menus.md).
+
 ## Which file to edit
 
 | Server path, relative to `tf/` | Purpose | Apply changes |
