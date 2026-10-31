@@ -4,7 +4,7 @@ Give players extra TF2 features, choose who gets them, and keep the balance in y
 
 Give members a Premium package, make a few features free for everyone, or let players earn points and spend them in a shop. You choose the bonuses, prices, time limits and restrictions. Points are optional.
 
-**Current version: 3.0.0-rc19**
+**Current version: 3.0.0-rc20**
 
 ## What can it do?
 

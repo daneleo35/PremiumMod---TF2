@@ -14,7 +14,7 @@ float g_UtilityMaskResume[MAXPLAYERS + 1];
 public Action UtilityOwnerTransmit(int entity, int viewer)
 {
     if (!ValidClient(viewer) || !IsPlayerAlive(viewer) || !g_RoundActive
-        || !IsValidEntity(entity) || GetEntPropEnt(entity, Prop_Send, "m_hBuilder") != viewer) return Plugin_Continue;
+        || !IsValidEntity(entity) || OwnedUtilityKind(viewer, EntIndexToEntRef(entity)) < 0) return Plugin_Continue;
     int reference = EntIndexToEntRef(entity);
     bool masked;
     for (int slot; slot < 6; slot++) if (g_MaskedUtilities[viewer][slot] == reference) { masked = true; break; }
@@ -68,18 +68,22 @@ int UtilityKind(int type, int mode)
 int OwnedUtilityKind(int client, int reference)
 {
     int entity = EntRefToEntIndex(reference);
-    if (entity <= MaxClients || !IsValidEntity(entity)
-        || GetEntPropEnt(entity, Prop_Send, "m_hBuilder") != client) return -1;
+    if (entity <= MaxClients || !IsValidEntity(entity)) return -1;
+    // Aim traces can hit any entity. Reject map props, ammo packs and other
+    // non-buildings before reading building-only network properties.
     char classname[32]; GetEntityClassname(entity, classname, sizeof(classname));
+    if ((!StrEqual(classname, "obj_dispenser") && !StrEqual(classname, "obj_teleporter"))
+        || !HasEntProp(entity, Prop_Send, "m_hBuilder")
+        || GetEntPropEnt(entity, Prop_Send, "m_hBuilder") != client) return -1;
     if (StrEqual(classname, "obj_dispenser")) return 0;
-    if (StrEqual(classname, "obj_teleporter"))
+    if (HasEntProp(entity, Prop_Send, "m_iObjectMode"))
         return UtilityKind(view_as<int>(TFObject_Teleporter), GetEntProp(entity, Prop_Send, "m_iObjectMode"));
     return -1;
 }
 
 bool PlacedUtility(int client, int entity, int kind)
 {
-    return OwnedUtilityKind(client, EntIndexToEntRef(entity)) == kind
+    return kind >= 0 && kind < 3 && OwnedUtilityKind(client, EntIndexToEntRef(entity)) == kind
         && (!HasEntProp(entity, Prop_Send, "m_bPlacing") || !GetEntProp(entity, Prop_Send, "m_bPlacing"));
 }
 

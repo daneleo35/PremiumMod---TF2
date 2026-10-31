@@ -35,6 +35,7 @@ int TestArgument(int argument, char[] output, int size)
 int g_Active = 80, g_Entities = 100, g_Checks;
 bool g_Valid[128], g_Placing[128], g_Carried[128], g_Disposable[128];
 bool g_TransmitHooked[128], g_TransmitAvailable = true;
+bool g_NoBuilder[128], g_NoMode[128];
 int g_EdictFlags[128];
 int g_Owner[128], g_Mode[128], g_Locked[128], g_Refs[128];
 char g_Class[128][40];
@@ -53,13 +54,28 @@ TFClassType TestPlayerClass(int client) { return TestClient(client) ? TFClass_En
 bool TestAlive(int client) { return TestClient(client) && g_Alive; }
 bool TestAccess(int client, const char[] name, int flags, bool overrideOnly) { return TestClient(client) && name[0] && flags == 0 && overrideOnly; }
 int TestRule(const char[] name) { return name[0] ? 0 : 1; }
-bool TestHas(int entity, PropType type, const char[] name) { return entity > 0 && type == Prop_Send && name[0] != '\0'; }
+bool TestBuilding(int entity)
+{
+    return TestValid(entity) && (StrEqual(g_Class[entity], "obj_sentrygun")
+        || StrEqual(g_Class[entity], "obj_dispenser") || StrEqual(g_Class[entity], "obj_teleporter"));
+}
+bool TestHas(int entity, PropType type, const char[] name)
+{
+    if (entity <= 0 || type != Prop_Send || !name[0]) return false;
+    if (StrEqual(name, "m_hBuilder")) return TestBuilding(entity) && !g_NoBuilder[entity];
+    if (StrEqual(name, "m_iObjectMode")) return (entity == 80 || TestBuilding(entity)) && !g_NoMode[entity];
+    return true;
+}
 int TestGet(int entity, PropType type, const char[] name, int size = 4, int element = 0)
 {
     if (type != Prop_Send || size != 4 || element != 0) return 0;
     if (StrEqual(name, "m_iObjectType")) return g_BuilderType;
     if (StrEqual(name, "m_bCarryingObject")) return g_Carrying;
-    if (StrEqual(name, "m_iObjectMode")) return entity == 80 ? g_BuilderMode : g_Mode[entity];
+    if (StrEqual(name, "m_iObjectMode"))
+    {
+        if (!TestHas(entity, type, name)) ThrowError("Property m_iObjectMode not found on %s", g_Class[entity]);
+        return entity == 80 ? g_BuilderMode : g_Mode[entity];
+    }
     if (StrEqual(name, "m_bPlacing")) return g_Placing[entity];
     if (StrEqual(name, "m_bCarried")) return g_Carried[entity];
     if (StrEqual(name, "m_bDisposableBuilding")) return g_Disposable[entity];
@@ -68,6 +84,8 @@ int TestGet(int entity, PropType type, const char[] name, int size = 4, int elem
 int TestGetEnt(int entity, PropType type, const char[] name)
 {
     if (type != Prop_Send) return -1;
+    if (StrEqual(name, "m_hBuilder") && !TestHas(entity, type, name))
+        ThrowError("Property m_hBuilder not found on %s", g_Class[entity]);
     return StrEqual(name, "m_hActiveWeapon") ? g_Active : g_Owner[entity];
 }
 void TestSet(int entity, PropType type, const char[] name, int value)
@@ -149,6 +167,7 @@ void Entity(int entity, const char[] classname, int owner = 1)
     g_Mode[entity] = 0; g_Locked[entity] = 0;
     g_Placing[entity] = false; g_Carried[entity] = false; g_Disposable[entity] = false;
     g_TransmitHooked[entity] = false; g_EdictFlags[entity] = FL_EDICT_FULLCHECK;
+    g_NoBuilder[entity] = false; g_NoMode[entity] = false;
     strcopy(g_Class[entity], sizeof(g_Class[]), classname);
 }
 
@@ -168,6 +187,38 @@ int NativeClientUtility(int client, int kind, bool applyTransmit)
 
 public int main()
 {
+    // Aim targets are arbitrary map entities, not necessarily buildings.
+    // The host must throw for absent properties, just as SourceMod does.
+    char nonBuildings[][] = {"tf_ammo_pack", "func_respawnroomvisualizer", "func_door", "prop_dynamic"};
+    for (int i; i < sizeof(nonBuildings); i++)
+    {
+        Entity(90, nonBuildings[i]);
+        Check(OwnedUtilityKind(1, TestRef(90)) == -1, "non-building aim target has no utility kind");
+        Check(!PlacedUtility(1, 90, 0), "non-building target is not a placed dispenser");
+        Check(!PlacedUtility(1, 90, -1), "invalid utility kind cannot match a non-building");
+        Check(UtilityOwnerTransmit(90, 1) == Plugin_Continue, "unrelated transmit entity needs no building properties");
+    }
+    Entity(90, "obj_dispenser");
+    Check(OwnedUtilityKind(1, TestRef(90)) == 0, "owned dispenser is recognised");
+    Check(OwnedUtilityKind(2, TestRef(90)) == -1, "foreign utility is rejected");
+    g_NoBuilder[90] = true;
+    Check(OwnedUtilityKind(1, TestRef(90)) == -1, "building without ownership property is rejected safely");
+    Check(UtilityOwnerTransmit(90, 1) == Plugin_Continue, "transmit rejects building without ownership property");
+    Entity(90, "obj_teleporter");
+    Check(OwnedUtilityKind(1, TestRef(90)) == 1, "entrance is recognised");
+    g_Mode[90] = 1;
+    Check(OwnedUtilityKind(1, TestRef(90)) == 2, "exit is recognised");
+    g_Mode[90] = 2;
+    Check(OwnedUtilityKind(1, TestRef(90)) == -1, "unsupported teleporter mode is rejected");
+    g_NoMode[90] = true;
+    Check(OwnedUtilityKind(1, TestRef(90)) == -1, "teleporter without mode property is rejected safely");
+    int oldReference = TestRef(90);
+    Entity(90, "tf_ammo_pack");
+    Check(OwnedUtilityKind(1, oldReference) == -1, "stale building reference cannot follow a reused ammo-pack edict");
+    Check(OwnedUtilityKind(1, INVALID_ENT_REFERENCE) == -1, "invalid reference is safe");
+    Check(OwnedUtilityKind(1, 0) == -1, "world target is safe");
+    Check(OwnedUtilityKind(1, 1) == -1, "player target is safe");
+    g_Valid[90] = false;
     cvDispenserLimit.IntValue = 3; cvEntranceLimit.IntValue = 3; cvExitLimit.IntValue = 3;
     cvTeamSentries.IntValue = 32;
     cvSentryLimit.IntValue = 3;

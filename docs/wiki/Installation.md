@@ -62,7 +62,7 @@ sm_premium_diagnostics
 premium_version
 ```
 
-Check that the version is `3.0.0-rc15` and there are no Premium or TF2Attributes errors. The player database may take a moment to finish loading.
+Check that the version is `3.0.0-rc20` and there are no Premium or TF2Attributes errors. The player database may take a moment to finish loading.
 
 Test with an ordinary player as well as a member. An admin with full access may automatically qualify for Premium, so testing only with your own admin account will not show what everyone else gets.
 
@@ -87,3 +87,5 @@ RC19 has built-in chat layouts, so older valid translation files no longer make 
 After a translation-only replacement, reload phrases with `sm_reload_translations`. A normal full upgrade should also reload the plugin or change map/restart. The conservative multiline translation layout is intentional; do not compress phrase sections onto one line.
 
 [Next: Configuration](Configuration.md) · [Home](Home.md)
+
+RC20 fixes repeated building-tooltip errors when looking at doors, ammo packs or props. Upgrading from RC19 needs only the plugin file; keep your existing configs and translations.

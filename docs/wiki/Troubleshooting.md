@@ -1,6 +1,6 @@
 # Troubleshooting
 
-Start with `sm plugins list`, `sm_premium_diagnostics` and the latest SourceMod error log. Confirm version `3.0.0-rc19` and remove older duplicate Premium binaries. Use an ordinary authenticated test account as well as an administrator: root/flag access can hide permission and shop problems.
+Start with `sm plugins list`, `sm_premium_diagnostics` and the latest SourceMod error log. Confirm version `3.0.0-rc20` and remove older duplicate Premium binaries. Use an ordinary authenticated test account as well as an administrator: root/flag access can hide permission and shop problems.
 
 ## Plugin will not load
 
@@ -41,6 +41,10 @@ A flight map ban blocks both movements. State/fuel/round restrictions can stop m
 Count **all** owned buildings: the fixed shared limit is six, and both teleporter ends count separately. Check per-type access/limits and the team extra-sentry cap. Extra sentries are deliberately level one; utilities have normal upgrades. A carried existing building can be redeployed at capacity.
 
 Use the ordinary PDA. Friendly wrench work can briefly pause its temporary building-count adjustment and show “Already Built.” Read [Engineer buildings](Engineer-Buildings.md) for pairing and native restrictions. For tooltip issues, check owner/aim/range, `premium_engineer_hud`, `premium_sentry_labels` and your tooltip preference.
+
+## Errors while aiming at doors, ammo packs or props
+
+If the log reports `Property "m_hBuilder" not found` through `OwnedUtilityKind` and `TooltipHostTarget`, update to RC20 or later. The tooltip now rejects unrelated aim targets before reading building properties. Replace only the plugin; your config and translation files can stay.
 
 ## Points/shop unavailable or not awarding
 

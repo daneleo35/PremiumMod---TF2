@@ -10,7 +10,7 @@ import sys
 import zipfile
 
 ROOT = Path(__file__).resolve().parent
-VERSION = '3.0.0-rc19'
+VERSION = '3.0.0-rc20'
 EXTERNAL_HEADERS = {'morecolors.inc', 'tf2attributes.inc'}
 
 
