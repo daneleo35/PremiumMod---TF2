@@ -1,6 +1,6 @@
 # Troubleshooting
 
-Start with `sm plugins list`, `sm_premium_diagnostics` and the latest SourceMod error log. Confirm version `3.0.0-rc15` and remove older duplicate Premium binaries. Use an ordinary authenticated test account as well as an administrator: root/flag access can hide permission and shop problems.
+Start with `sm plugins list`, `sm_premium_diagnostics` and the latest SourceMod error log. Confirm version `3.0.0-rc17` and remove older duplicate Premium binaries. Use an ordinary authenticated test account as well as an administrator: root/flag access can hide permission and shop problems.
 
 ## Plugin will not load
 

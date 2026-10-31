@@ -5,8 +5,28 @@ int g_ExtraUtilities[MAXPLAYERS + 1][3][3];
 int g_UtilityOrder[MAXPLAYERS + 1][3][3];
 int g_UtilitySequence;
 int g_MaskedUtilities[MAXPLAYERS + 1][6];
+int g_UtilityTransmitFlags[MAXPLAYERS + 1][6];
 float g_NextBuildingNotice[MAXPLAYERS + 1];
 float g_UtilityMaskResume[MAXPLAYERS + 1];
+
+#define UTILITY_TRANSMIT_FLAGS (FL_EDICT_ALWAYS | FL_EDICT_DONTSEND | FL_EDICT_PVSCHECK)
+
+public Action UtilityOwnerTransmit(int entity, int viewer)
+{
+    if (!ValidClient(viewer) || !IsPlayerAlive(viewer) || !g_RoundActive
+        || !IsValidEntity(entity) || GetEntPropEnt(entity, Prop_Send, "m_hBuilder") != viewer) return Plugin_Continue;
+    int reference = EntIndexToEntRef(entity);
+    bool masked;
+    for (int slot; slot < 6; slot++) if (g_MaskedUtilities[viewer][slot] == reference) { masked = true; break; }
+    if (!masked || !GetEntProp(entity, Prop_Send, "m_bDisposableBuilding")) return Plugin_Continue;
+    int weapon = GetEntPropEnt(viewer, Prop_Send, "m_hActiveWeapon");
+    if (!ValidWeapon(weapon)) return Plugin_Continue;
+    char classname[64]; GetEntityClassname(weapon, classname, sizeof(classname));
+    // C_TFPlayer::GetObjectOfType ignores disposable flags but skips dormant
+    // entities. Only the owner's build-PDA selection needs this client mask.
+    // Keep real types/modes/ownership; show everything again during placement.
+    return StrEqual(classname, "tf_weapon_pda_engineer_build") ? Plugin_Handled : Plugin_Continue;
+}
 
 void ProtectUtilityWrench(int attacker, const char[] classname)
 {
@@ -90,9 +110,16 @@ void RestoreUtilityMasks(int client)
     for (int slot; slot < 6; slot++)
     {
         int reference = g_MaskedUtilities[client][slot];
+        int savedFlags = g_UtilityTransmitFlags[client][slot];
         g_MaskedUtilities[client][slot] = INVALID_ENT_REFERENCE;
-        if (OwnedUtilityKind(client, reference) < 0) continue;
+        g_UtilityTransmitFlags[client][slot] = 0;
         int entity = EntRefToEntIndex(reference);
+        if (entity <= MaxClients || !IsValidEntity(entity)) continue;
+        SDKUnhook(entity, SDKHook_SetTransmit, UtilityOwnerTransmit);
+        int flags = GetEdictFlags(entity);
+        // Do not overwrite a later transmit policy installed by another plugin.
+        if (!(flags & UTILITY_TRANSMIT_FLAGS)) SetEdictFlags(entity, (flags & ~UTILITY_TRANSMIT_FLAGS) | savedFlags);
+        if (OwnedUtilityKind(client, reference) < 0) continue;
         if (GetEntProp(entity, Prop_Send, "m_bDisposableBuilding"))
             SetEntProp(entity, Prop_Send, "m_bDisposableBuilding", 0);
     }
@@ -127,11 +154,21 @@ void UpdateUtilityPda(int client, int weapon = -1)
             if (!PlacedUtility(client, entity, kind) || entity == carried
                 || !HasEntProp(entity, Prop_Send, "m_bDisposableBuilding")
                 || GetEntProp(entity, Prop_Send, "m_bDisposableBuilding")) continue;
-            // Both client PDA and server counts omit this flag. Claim only
-            // flags we change ourselves, and restore on every PDA exit/death.
-            // Unlike an unused object mode, this keeps valid target-ID strings
-            // and preserves the entrance/exit mode used by native teleporters.
-            g_MaskedUtilities[client][slot++] = EntIndexToEntRef(entity);
+            int flags = GetEdictFlags(entity);
+            // Respect objects deliberately hidden by another plugin.
+            if (flags & FL_EDICT_DONTSEND) continue;
+            if (!SDKHookEx(entity, SDKHook_SetTransmit, UtilityOwnerTransmit))
+            {
+                if (GetGameTime() >= g_NextBuildingNotice[client])
+                { g_NextBuildingNotice[client] = GetGameTime() + 5.0; Tell(client, "Extra utility building menu could not initialize its SDKHooks transmit hook. Check the server log."); LogError("Premium: SetTransmit hook unavailable for utility entity %d", entity); }
+                continue;
+            }
+            // Server counts skip disposable objects; the client does not.
+            // Force the normal ShouldTransmit path so SDKHooks can make these
+            // dormant for their owner only while the build selection is open.
+            g_MaskedUtilities[client][slot] = EntIndexToEntRef(entity);
+            g_UtilityTransmitFlags[client][slot++] = flags & UTILITY_TRANSMIT_FLAGS;
+            SetEdictFlags(entity, flags & ~UTILITY_TRANSMIT_FLAGS);
             SetEntProp(entity, Prop_Send, "m_bDisposableBuilding", 1);
         }
     }

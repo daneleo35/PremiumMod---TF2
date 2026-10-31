@@ -2,6 +2,7 @@
 #pragma newdecls required
 #include <sourcemod>
 #include <sdktools>
+#include <sdkhooks>
 #include <tf2_stocks>
 #include "../scripting/premium/core.inc"
 #include "../scripting/premium/feature_policy.inc"
@@ -33,6 +34,8 @@ int TestArgument(int argument, char[] output, int size)
 { strcopy(output, size, argument == 1 ? g_CommandType : g_CommandMode); return strlen(output); }
 int g_Active = 80, g_Entities = 100, g_Checks;
 bool g_Valid[128], g_Placing[128], g_Carried[128], g_Disposable[128];
+bool g_TransmitHooked[128], g_TransmitAvailable = true;
+int g_EdictFlags[128];
 int g_Owner[128], g_Mode[128], g_Locked[128], g_Refs[128];
 char g_Class[128][40];
 
@@ -82,6 +85,16 @@ int TestFind(int start, const char[] classname)
     return -1;
 }
 void TestRemove(int entity) { g_Valid[entity] = false; }
+bool TestHookEx(int entity, SDKHookType type, SDKHookCB callback)
+{
+    if (!g_TransmitAvailable || !TestValid(entity) || type != SDKHook_SetTransmit || callback == INVALID_FUNCTION) return false;
+    g_TransmitHooked[entity] = true; return true;
+}
+void TestUnhook(int entity, SDKHookType type, SDKHookCB callback)
+{ if (TestValid(entity) && type == SDKHook_SetTransmit && callback != INVALID_FUNCTION) g_TransmitHooked[entity] = false; }
+int TestEdictFlags(int entity) { return g_EdictFlags[entity]; }
+void TestSetEdictFlags(int entity, int flags) { g_EdictFlags[entity] = flags; }
+void TestLogError(const char[] format, any ...) { if (!format[0]) ThrowError("bad log"); }
 bool ValidWeapon(int entity) { return TestValid(entity) && entity >= 80; }
 int TestSlot(int client, int slot) { return client > 0 && slot == 3 ? 80 : -1; }
 int TestEntityCount() { return g_Entities; }
@@ -113,6 +126,11 @@ void Tell(int client, const char[] format, any ...) { if (client < 0 || !format[
 #define GetPlayerWeaponSlot TestSlot
 #define GetEntityCount TestEntityCount
 #define GetMaxEntities TestMaxEntities
+#define SDKHookEx TestHookEx
+#define SDKUnhook TestUnhook
+#define GetEdictFlags TestEdictFlags
+#define SetEdictFlags TestSetEdictFlags
+#define LogError TestLogError
 #include "../scripting/premium/utility_buildings.inc"
 #include "../scripting/premium/buildings.inc"
 
@@ -130,7 +148,22 @@ void Entity(int entity, const char[] classname, int owner = 1)
     g_Owner[entity] = owner;
     g_Mode[entity] = 0; g_Locked[entity] = 0;
     g_Placing[entity] = false; g_Carried[entity] = false; g_Disposable[entity] = false;
+    g_TransmitHooked[entity] = false; g_EdictFlags[entity] = FL_EDICT_FULLCHECK;
     strcopy(g_Class[entity], sizeof(g_Class[]), classname);
+}
+
+// Model the external client lookup from C_TFPlayer::GetObjectOfType: it checks
+// type/mode and dormancy, NOT m_bDisposableBuilding. The previous regression
+// tests only asserted the server flag and therefore missed the real PDA block.
+int NativeClientUtility(int client, int kind, bool applyTransmit)
+{
+    for (int entity = 40; entity < 80; entity++)
+    {
+        if (!g_Valid[entity] || OwnedUtilityKind(client, TestRef(entity)) != kind) continue;
+        if (applyTransmit && g_TransmitHooked[entity] && UtilityOwnerTransmit(entity, client) == Plugin_Handled) continue;
+        return entity;
+    }
+    return -1;
 }
 
 public int main()
@@ -238,16 +271,28 @@ public int main()
     strcopy(g_Class[80], sizeof(g_Class[]), "tf_weapon_pda_engineer_build");
     Entity(40, "obj_sentrygun"); TrackPlacedSentry(1, 40);
     Entity(41, "obj_dispenser"); TrackPlacedUtility(1, 41);
+    g_EdictFlags[41] = FL_EDICT_ALWAYS | FL_EDICT_CHANGED;
     Entity(42, "obj_teleporter"); TrackPlacedUtility(1, 42);
     Entity(43, "obj_teleporter"); g_Mode[43] = 1; TrackPlacedUtility(1, 43);
     Check(CountOwnedBuildings(1, false) == 4 && CountUtilities(1, 0) == 1, "ordinary four buildings counted in shared capacity");
     Check(CountUtilities(1, 1) == 1 && CountUtilities(1, 2) == 1, "teleporter ends counted separately");
     UpdateUtilityPda(1);
     Check(g_Disposable[41] && g_Disposable[42] && g_Disposable[43], "PDA opens additional native utility blueprints");
+    Check(NativeClientUtility(1, 0, false) == 41 && NativeClientUtility(1, 1, false) == 42 && NativeClientUtility(1, 2, false) == 43, "disposable flags alone do not bypass the native client menu");
+    Check(NativeClientUtility(1, 0, true) == -1 && NativeClientUtility(1, 1, true) == -1 && NativeClientUtility(1, 2, true) == -1, "owner-only dormancy removes the actual client lookup block for all utility directions");
+    Check(!(g_EdictFlags[41] & FL_EDICT_ALWAYS) && (g_EdictFlags[41] & FL_EDICT_CHANGED), "always-transmit fast path is bypassed without losing dirty flags");
+    Check(g_TransmitHooked[41] && g_TransmitHooked[42] && g_TransmitHooked[43], "client PDA mask hooks dispenser and both teleporter ends");
+    Check(UtilityOwnerTransmit(41, 1) == Plugin_Handled && UtilityOwnerTransmit(42, 1) == Plugin_Handled && UtilityOwnerTransmit(43, 1) == Plugin_Handled, "owner build selection omits all masked utility types");
+    Check(UtilityOwnerTransmit(41, 2) == Plugin_Continue && UtilityOwnerTransmit(42, 2) == Plugin_Continue, "other viewers keep seeing functioning buildings");
+    strcopy(g_Class[80], sizeof(g_Class[]), "tf_weapon_builder");
+    Check(UtilityOwnerTransmit(41, 1) == Plugin_Continue && UtilityOwnerTransmit(42, 1) == Plugin_Continue, "blueprint placement shows existing buildings again");
+    strcopy(g_Class[80], sizeof(g_Class[]), "tf_weapon_pda_engineer_build");
     Check(g_Mode[42] == 0 && g_Mode[43] == 1 && g_Owner[42] == 1 && g_Owner[43] == 1, "teleporter modes and builders remain native for pairing");
     Check(!g_Disposable[40], "utility masks never change sentry flags");
     g_Active = 81; UpdateUtilityPda(1);
     Check(!g_Disposable[41] && !g_Disposable[42] && !g_Disposable[43], "weapon exit restores all claimed utility flags");
+    Check(!g_TransmitHooked[41] && !g_TransmitHooked[42] && !g_TransmitHooked[43], "weapon exit removes owned transmit hooks");
+    Check((g_EdictFlags[41] & FL_EDICT_ALWAYS) && (g_EdictFlags[41] & FL_EDICT_CHANGED), "original transmit policy and dirty flags restored on exit");
     g_Active = 80;
     strcopy(g_Class[80], sizeof(g_Class[]), "tf_weapon_pda_engineer_destroy"); UpdateUtilityPda(1);
     Check(!g_Disposable[41] && !g_Disposable[42], "native destruction PDA retains real ownership flags");
@@ -342,6 +387,18 @@ public int main()
     RemoveExtraBuildings(1);
     Check(g_Valid[40] && g_Valid[41] && !g_Valid[42], "complete cleanup keeps the ordinary pair and removes the extra entrance");
     Check(UtilityKind(1, 2) == -1 && UtilityKind(0, 1) == -1 && UtilityKind(2, 0) == -1, "invalid utility modes and sentries are not misclassified");
+    for (int entity = 40; entity < 80; entity++) g_Valid[entity] = false;
+    RemoveExtraBuildings(1); RemoveExtraBuildings(2);
+    cvDispenserLimit.IntValue = 3; cvEntranceLimit.IntValue = 3; cvExitLimit.IntValue = 3;
+    strcopy(g_Class[80], sizeof(g_Class[]), "tf_weapon_pda_engineer_build");
+    Entity(40, "obj_dispenser"); g_TransmitAvailable = false; UpdateUtilityPda(1);
+    Check(!g_Disposable[40] && !g_TransmitHooked[40], "failed transmit hook cannot leave a half-applied server mask");
+    g_TransmitAvailable = true; g_EdictFlags[40] = FL_EDICT_DONTSEND; UpdateUtilityPda(1);
+    Check(!g_Disposable[40] && !g_TransmitHooked[40] && (g_EdictFlags[40] & FL_EDICT_DONTSEND), "another plugin's hidden entity policy is respected");
+    g_EdictFlags[40] = FL_EDICT_ALWAYS; UpdateUtilityPda(1);
+    Check(g_Disposable[40] && g_TransmitHooked[40], "healthy hook can reacquire the mask after failure");
+    g_EdictFlags[40] = FL_EDICT_DONTSEND; RestoreUtilityMasks(1);
+    Check((g_EdictFlags[40] & FL_EDICT_DONTSEND) && !g_Disposable[40] && !g_TransmitHooked[40], "later foreign transmit changes survive restoration");
     PrintToServer("PASS: %d sentry ownership assertions", g_Checks);
     return g_Checks;
 }

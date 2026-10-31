@@ -45,6 +45,8 @@ The existing native health/upgrade panel cannot accept a custom text line from t
 
 The plugin makes the normal build menu allow another building when you have room. If a friendly Engineer is working on a building nearby, it briefly pauses that change so their upgrades and hauling still work. You may see “Already Built” for a moment; try again after the pause.
 
+RC17 corrects a client-side block that prevented extra dispensers and teleporters from being selected. Existing eligible utility buildings are temporarily hidden from their owner while the build-selection PDA is open. They are shown again when you select a blueprint or close the menu. Other players keep seeing them, and their real ownership, direction and server behaviour stay unchanged. The shared six-building limit still applies.
+
 Hauling, friendly upgrades and teleporter pairing still need checking on a real server, especially with custom maps or other plugins. See the [server test plan](https://github.com/daneleo35/PremiumMod---TF2/blob/main/docs/RC10_SERVER_TEST.md) and [testing guide](Development-and-Testing.md).
 
 [Configuration](Configuration.md) · [Features](Features.md) · [Home](Home.md)
