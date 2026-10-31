@@ -4,7 +4,7 @@ Give players extra TF2 features, choose who gets them, and keep the balance in y
 
 Give members a Premium package, make a few features free for everyone, or let players earn points and spend them in a shop. You choose the bonuses, prices, time limits and restrictions. Points are optional.
 
-**Current version: 3.0.0-rc13.** This is a test release. It has passed the automated checks, but still needs testing on a real TF2 server before you rely on it for public play.
+**Current version: 3.0.0-rc13**
 
 ## What can it do?
 
@@ -57,7 +57,7 @@ The first script gets the tools needed to build it. The second creates the plugi
 
 Extract the **built install ZIP** into your server's `tf/` folder. Remove the old Premium plugin first. Open `tf/cfg/sourcemod/premium_rebuilt.cfg`, choose your settings, then restart the server or change map. Keep your existing player data and customised settings when upgrading.
 
-The [installation guide](docs/wiki/Installation.md) shows where each file goes and what to check on first start. You do not need modified TF2 game DLLs or SOs. More Colors is included when the plugin is compiled; it is not another plugin you need to load on the server.
+The [installation guide](docs/wiki/Installation.md) shows where each file goes and what to check on first start. [More Colors](https://github.com/DoctorMcKay/sourcemod-plugins/blob/master/scripting/include/morecolors.inc) is needed to compile the plugin; the first script downloads it for you. You do not need to load it as a separate plugin on the server.
 
 ## A few useful examples
 
@@ -110,7 +110,7 @@ Points and points-bought trials start **off**. Free trials start **on**, lasting
 
 Type `!premium` to open the menu. Use `!premium_benefits` to see what you actually get and `!premium_options` to change your personal options.
 
-Premium and Trial tags appear automatically in normal chat. Players do not need to run `sm_premium_chat`; that command only helps investigate a missing tag.
+Premium and Trial tags appear automatically in normal chat.
 
 ## Credits and licence
 
