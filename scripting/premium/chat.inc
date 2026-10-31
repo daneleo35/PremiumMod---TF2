@@ -71,6 +71,23 @@ bool ExistingChatProcessorActive()
     return enabled == null || enabled.BoolValue;
 }
 
+#if !defined PREMIUM_CHAT_TRANSLATOR_TEST
+bool PremiumChatTranslate(const char[] phrase, int recipient, char[] layout, int size)
+{
+    if (!TranslationPhraseExists(phrase)) return false;
+    FormatEx(layout, size, "%T", phrase, recipient);
+    return true;
+}
+#endif
+
+bool BuildPremiumChatFormat(int author, int recipient, const char[] nativeFormat, const char[] nameToken, char[] output, int size)
+{
+    char phrase[40], layout[256];
+    if (!PremiumChatPhrase(nativeFormat, phrase, sizeof(phrase)) || !PremiumChatTranslate(phrase, recipient, layout, sizeof(layout))) return false;
+    CReplaceColorCodes(layout, author, false, sizeof(layout));
+    return PremiumChatCompose(layout, nameToken, output, size);
+}
+
 public Action InterceptPremiumChat(UserMsg id, BfRead message, const int[] players, int count, bool reliable, bool init)
 {
     if (g_SendingTaggedChat || !cvChatTags.BoolValue
@@ -113,22 +130,35 @@ public void SendPremiumChat(any data)
     }
     delete pending;
     if (g_Stopping || !ValidClient(client) || valid == 0) return;
-    int overhead = 2 + strlen(format) + 1;
-    for (int i = 1; i < 4; i++) overhead += strlen(parameters[i]) + 1;
-    int nameCapacity = 255 - overhead;
-    if (nameCapacity > sizeof(parameters[])) nameCapacity = sizeof(parameters[]);
-    if (nameCapacity > 1) PrefixPremiumName(client, parameters[0], nameCapacity);
+    // TF2 sanitizes colour controls from parameters[0] and parameters[1].
+    // Keep them byte-for-byte; colour the layout around its %s1 placeholder.
+    char nameToken[128] = "%s1";
+    bool tagged = PrefixPremiumName(client, nameToken, sizeof(nameToken));
+    int overhead = 2 + 1;
+    for (int i; i < 4; i++) overhead += strlen(parameters[i]) + 1;
+    int layoutBudget = 255 - overhead;
     g_SendingTaggedChat = true;
-    BfWrite output = view_as<BfWrite>(StartMessageEx(g_ChatMessage, recipients, valid, reliable ? USERMSG_RELIABLE : 0));
-    if (output != null)
+    // Resolve our chat labels in each recipient's language. Recipient serials,
+    // chat flag, speaker and all four original parameters remain authoritative.
+    for (int i; i < valid; i++)
     {
-        output.WriteByte(client);
-        output.WriteByte(chat);
-        output.WriteString(format);
-        for (int i; i < 4; i++) output.WriteString(parameters[i]);
-        EndMessage();
+        char taggedFormat[512];
+        bool useTag = tagged && BuildPremiumChatFormat(client, recipients[i], format, nameToken, taggedFormat, sizeof(taggedFormat)) && strlen(taggedFormat) <= layoutBudget;
+        int recipient[1]; recipient[0] = recipients[i];
+        SendPremiumChatPayload(client, chat, useTag ? taggedFormat : format, parameters, recipient, 1, reliable);
     }
     g_SendingTaggedChat = false;
+}
+
+void SendPremiumChatPayload(int client, int chat, const char[] format, const char[][] parameters, const int[] recipients, int valid, bool reliable)
+{
+    BfWrite output = view_as<BfWrite>(StartMessageEx(g_ChatMessage, recipients, valid, reliable ? USERMSG_RELIABLE : 0));
+    if (output == null) return;
+    output.WriteByte(client);
+    output.WriteByte(chat);
+    output.WriteString(format);
+    for (int i; i < 4; i++) output.WriteString(parameters[i]);
+    EndMessage();
 }
 
 public Action CommandChatDiagnostics(int client, int args)

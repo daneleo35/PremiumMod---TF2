@@ -1,5 +1,37 @@
 "Phrases"
 {
+    "Chat Layout All"
+    {
+        "en" "{default}@NAME@{default} :  @TEXT@"
+    }
+    "Chat Layout All Dead"
+    {
+        "en" "{default}*DEAD* @NAME@{default} :  @TEXT@"
+    }
+    "Chat Layout All Spec"
+    {
+        "en" "{default}*SPEC* @NAME@{default} :  @TEXT@"
+    }
+    "Chat Layout Team"
+    {
+        "en" "{default}(TEAM) @NAME@{default} :  @TEXT@"
+    }
+    "Chat Layout Team Dead"
+    {
+        "en" "{default}*DEAD*(TEAM) @NAME@{default} :  @TEXT@"
+    }
+    "Chat Layout Team Location"
+    {
+        "en" "{default}(TEAM) @NAME@{default} @LOCATION@ :  @TEXT@"
+    }
+    "Chat Layout Spec"
+    {
+        "en" "{default}(Spectator) @NAME@{default} :  @TEXT@"
+    }
+    "Chat Layout Coach"
+    {
+        "en" "{default}(Coach) @NAME@{default} :  @TEXT@"
+    }
     "In Game Only"
     {
         "en"    "Use this command while connected to the game."

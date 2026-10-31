@@ -163,6 +163,11 @@ class ArtifactChecks(unittest.TestCase):
         self.assertNotIn('USERMSG_BLOCKHOOKS', source)
         self.assertIn('PrefixPremiumName(author, name, 64)', source)
         self.assertIn('255 - overhead', source)
+        sender = source.split('public void SendPremiumChat(', 1)[1].split('public Action CommandChatDiagnostics', 1)[0]
+        self.assertNotIn('PrefixPremiumName(client, parameters[0]', sender)
+        self.assertIn('BuildPremiumChatFormat(client, recipients[i]', sender)
+        self.assertIn('PremiumChatTranslate(phrase, recipient', source)
+        self.assertIn('strlen(taggedFormat) <= layoutBudget', sender)
 
     def test_turret_tooltip_uses_native_owner_only_events_without_big_overlay(self):
         source = (ROOT/'scripting/premium/presentation.inc').read_text()

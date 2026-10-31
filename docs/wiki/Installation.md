@@ -62,7 +62,7 @@ sm_premium_diagnostics
 premium_version
 ```
 
-Check that the version is `3.0.0-rc14` and there are no Premium or TF2Attributes errors. The player database may take a moment to finish loading.
+Check that the version is `3.0.0-rc15` and there are no Premium or TF2Attributes errors. The player database may take a moment to finish loading.
 
 Test with an ordinary player as well as a member. An admin with full access may automatically qualify for Premium, so testing only with your own admin account will not show what everyone else gets.
 
@@ -75,6 +75,8 @@ For a named backend, configure an entry in `addons/sourcemod/configs/databases.c
 Merge the [database example](https://github.com/daneleo35/PremiumMod---TF2/blob/main/configs/premium-databases.example.txt) into your existing `databases.cfg`; do not replace the whole file or publish its credentials. Read [Storage/recovery](Storage-and-Recovery.md) before changing a backend after points have been used.
 
 ## Upgrading
+
+RC15 chat-tag fix: replace both `premium.smx` and `premium_rebuilt.phrases.txt`. Keep your existing configs. The new chat layout phrases are required for the corrected native tags.
 
 1. Back up the plugin, configuration, translations, database and any points outbox files together.
 2. Let pending purchases settle before changing storage settings.
