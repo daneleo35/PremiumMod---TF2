@@ -1,0 +1,42 @@
+Premium Mod 3.0.0-rc2
+
+Original feature concept: daneleo and noodleboy347.
+Original discussion: https://forums.alliedmods.net/showthread.php?t=225876
+
+TF2Attributes 1.7.5.1 by FlaminSarge and contributors:
+https://github.com/FlaminSarge/tf2attributes/releases/tag/v1.7.5.1
+Install the official plugin and matching gamedata separately from the author.
+The runtime plugin, gamedata, source, and compile-time header are not bundled
+in Premium release ZIPs. The build/bootstrap tools fetch the header locally.
+The upstream source reports internal plugin version 1.7.5; 1.7.5.1 is the release tag.
+Upstream terms apply to these third-party files.
+
+SourceMod / SourcePawn SDK and compiler by AlliedModders:
+https://www.sourcemod.net/
+https://github.com/alliedmodders/sourcemod
+Build toolchain: 1.12.0.7259. Compiler/SDK downloads are development tools,
+not included in the server install ZIP. SDK include files retain their notices.
+
+Optional local test interpreter pysmx 0.4.0 by Zach Kanzler:
+https://pypi.org/project/pysmx/0.4.0/
+MIT license. Installed only in tools/python-libs when requested.
+Its bundled SourcePawn 1.11.0.6931 compiler is used for policy tests only.
+Neither pysmx nor its Python dependencies is installed on the TF2 server.
+
+More Colors 1.9.1 by Dr. McKay:
+https://github.com/DoctorMcKay/sourcemod-plugins
+https://forums.alliedmods.net/showthread.php?t=185016
+Obtain the include separately from its author before compiling Premium.
+Pinned upstream commit: 5fd5e7ae77cd4f53e0805d0792390545d6037f30
+The precompiled premium.smx embeds More Colors code. There is no additional
+runtime colours plugin. Omitting the separate include does not remove that
+compiled third-party implementation. Attribution is retained here; upstream
+redistribution terms have not been independently cleared by this project.
+The source-only ZIP contains no third-party headers or compiled binaries.
+
+Premium Mod linking exception:
+As a special exception, permission is granted to link this plugin with the
+Half-Life 2 Source Engine, the SourcePawn JIT, and game modifications that run
+on that engine, and distribute the resulting combination. Other obligations
+of GPL-3.0-or-later remain in effect. This permission does not change any
+third-party component's own license.

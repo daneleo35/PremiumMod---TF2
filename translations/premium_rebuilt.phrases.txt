@@ -1,0 +1,462 @@
+"Phrases"
+{
+    "In Game Only"
+    {
+        "en"    "Use this command while connected to the game."
+    }
+
+    "No Access"
+    {
+        "en"    "You do not currently have access to this feature."
+    }
+
+    "Feature Disabled"
+    {
+        "en"    "This feature is disabled on this server."
+    }
+
+    "Storage Pending"
+    {
+        "en"    "Membership and trial records are not ready. Please retry shortly."
+    }
+
+    "Welcome"
+    {
+        "en"    "Welcome back! Type !premium for your features."
+    }
+
+    "Member Joined"
+    {
+        "#format"    "{1:N}"
+        "en"    "{1} is a premium member."
+    }
+
+    "Advertisement"
+    {
+        "en"    "Type !premium to view premium features, or !trial to request your trial."
+    }
+
+    "Trial Activated"
+    {
+        "#format"    "{1:d}"
+        "en"    "Trial saved for {1} seconds. It continues across reconnects and counts offline time."
+    }
+
+    "Trial Used"
+    {
+        "en"    "This Steam account has already used its trial."
+    }
+
+    "Trial Ended"
+    {
+        "en"    "Your premium trial has ended."
+    }
+
+    "Trial Remaining"
+    {
+        "#format"    "{1:d},{2:d}"
+        "en"    "Trial remaining: {1} minutes, {2} seconds."
+    }
+
+    "Status Active"
+    {
+        "en"    "Your premium access is active."
+    }
+
+    "Status Inactive"
+    {
+        "en"    "Your premium access is inactive."
+    }
+
+    "Menu Title"
+    {
+        "en"    "Premium features"
+    }
+
+    "Menu Status"
+    {
+        "en"    "Show my premium status"
+    }
+
+    "Menu Benefits"
+    {
+        "en"    "View enabled premium benefits"
+    }
+
+    "Menu Benefits Title"
+    {
+        "en"    "Enabled premium benefits"
+    }
+
+    "Menu Glow"
+    {
+        "en"    "Toggle particle glow"
+    }
+
+    "Menu Trial"
+    {
+        "en"    "Start my one-time trial"
+    }
+
+    "Menu Dark"
+    {
+        "en"    "Toggle dark tint"
+    }
+
+    "Menu Save"
+    {
+        "en"    "Save my current location"
+    }
+
+    "Menu Load"
+    {
+        "en"    "Return to my saved location"
+    }
+
+    "FOV Usage"
+    {
+        "en"    "Usage: !premium_fov <75-120|reset>"
+    }
+
+    "FOV Updated"
+    {
+        "#format"    "{1:d}"
+        "en"    "Your field of view is set to {1}."
+    }
+
+    "Dark Enabled"
+    {
+        "en"    "Dark tint enabled."
+    }
+
+    "Dark Disabled"
+    {
+        "en"    "Dark tint disabled."
+    }
+
+    "Glow Enabled"
+    {
+        "en"    "Particle glow enabled. It appears while you are alive and visible, and is hidden while cloaked or disguised."
+    }
+
+    "Glow Disabled"
+    {
+        "en"    "Particle glow disabled; its emitters were removed."
+    }
+
+    "Glow Unavailable"
+    {
+        "en"    "Glow could not start right now. Partial effects were removed and the server will retry shortly."
+    }
+
+    "Glow Usage"
+    {
+        "en"    "Usage: !glow to toggle, or !glow on / !glow off"
+    }
+
+    "Benefit Health"
+    {
+        "en"    "Extra max health and spawn health"
+    }
+
+    "Benefit Speed"
+    {
+        "en"    "Game-aware class movement multipliers"
+    }
+
+    "Benefit Gravity"
+    {
+        "en"    "Custom gravity"
+    }
+
+    "Benefit Ammo"
+    {
+        "en"    "Extra reserve ammunition, including Pyro fuel; normal magazine sizes"
+    }
+
+    "Benefit Rewards"
+    {
+        "en"    "Health rewards for kills and assists"
+    }
+
+    "Benefit Color"
+    {
+        "en"    "Custom player colours"
+    }
+
+    "Benefit FOV"
+    {
+        "en"    "Adjustable field of view"
+    }
+
+    "Benefit Dark"
+    {
+        "en"    "Toggleable dark tint"
+    }
+
+    "Benefit Glow"
+    {
+        "en"    "Toggleable particle aura"
+    }
+
+    "Benefit Swap"
+    {
+        "en"    "Team switching"
+    }
+
+    "Benefit Uber"
+    {
+        "en"    "Spawn medigun charge"
+    }
+
+    "Benefit Throwables"
+    {
+        "en"    "Extra supported throwable reserves"
+    }
+
+    "Benefit Metal"
+    {
+        "en"    "Extra Engineer metal capacity and spawn reserve; no automatic refill"
+    }
+
+    "Benefit Respawn"
+    {
+        "en"    "Quick respawn in supported modes"
+    }
+
+    "Benefit Cloak"
+    {
+        "en"    "Configurable finite cloak duration, including Dead Ringer"
+    }
+
+    "Benefit Arrows"
+    {
+        "en"    "Lit bow arrows"
+    }
+
+    "Benefit Bhop"
+    {
+        "en"    "Bunnyhop and trimp"
+    }
+
+    "Benefit Flight"
+    {
+        "en"    "Flamethrower recoil flight"
+    }
+
+    "Benefit Teleport"
+    {
+        "en"    "Save and load a safe location"
+    }
+
+    "Color Usage"
+    {
+        "en"    "Usage: !colorme <red 0-255> <green 0-255> <blue 0-255>, or !colorme reset"
+    }
+
+    "Color Updated"
+    {
+        "en"    "Your color preference was updated."
+    }
+
+    "Team Unavailable"
+    {
+        "en"    "You cannot switch teams in your current state or game mode."
+    }
+
+    "Team Changed"
+    {
+        "en"    "Your team was changed."
+    }
+
+    "Teleport Unavailable"
+    {
+        "en"    "Teleporting is unavailable in your current state, including while carrying an objective."
+    }
+
+    "Save Ground Only"
+    {
+        "en"    "Stand on the ground without crouching before saving a location."
+    }
+
+    "Teleport Blocked"
+    {
+        "en"    "That destination does not have enough clear space for your player."
+    }
+
+    "Location Saved"
+    {
+        "en"    "Location saved for this life and team. Use !load_loc to return."
+    }
+
+    "No Location"
+    {
+        "en"    "Save a location with !save_loc first. Saved locations expire on death, team change, and map change."
+    }
+
+    "Teleport Cooldown"
+    {
+        "#format"    "{1:d}"
+        "en"    "Wait {1} seconds before teleporting again."
+    }
+
+    "Location Loaded"
+    {
+        "en"    "Returned to your saved location."
+    }
+
+    "Fake Kill"
+    {
+        "en"    "That Spy feigned death with the Dead Ringer."
+    }
+
+    "Kill Reward"
+    {
+        "#format"    "{1:d}"
+        "en"    "Kill reward: +{1} health."
+    }
+
+    "Assist Reward"
+    {
+        "#format"    "{1:d}"
+        "en"    "Assist reward: +{1} health."
+    }
+
+    "Membership Usage"
+    {
+        "en"    "Usage: premadduser / premremuser / createtrial / resettrial <player|#userid|@selector|Steam2|Steam3|Steam64>"
+    }
+
+    "Database Updated"
+    {
+        "#format"    "{1:s},{2:d}"
+        "en"    "Updated {1}; affected rows: {2}. Other flags or active trials may still grant premium access."
+    }
+
+    "Database Write Failed"
+    {
+        "en"    "The membership change failed. See the server error log; no successful write is assumed."
+    }
+
+    "Settings Refreshed"
+    {
+        "en"    "Live settings, effects, and online membership records are being refreshed. No config file was overwritten."
+    }
+
+    "Database Connecting"
+    {
+        "en"    "Connecting and verifying premium tables. See the server log for the result."
+    }
+
+    "Legacy Missing"
+    {
+        "en"    "Could not read the old premium table in this database. See the server error log."
+    }
+
+    "Legacy Empty"
+    {
+        "#format"    "{1:d},{2:d}"
+        "en"    "No valid legacy rows at offset {1}; invalid rows skipped: {2}."
+    }
+
+    "Legacy Imported"
+    {
+        "#format"    "{1:d},{2:d},{3:d}"
+        "en"    "Imported a batch of {1} identity rows; skipped {2} invalid rows. Repeat premium_import_legacy {3} for the next batch."
+    }
+
+    "Benefit Sentry"
+    {
+        "en"    "Build extra sentries using your normal construction PDA; extras stay level 1"
+    }
+
+    "Sentry Limit"
+    {
+        "#format"    "{1:d}"
+        "en"    "Sentry limit reached or extra sentries disabled. Maximum: {1}, including your ordinary sentry. Other buildings also need free ownership slots."
+    }
+
+    "Gameplay Team Disabled"
+    {
+        "en"    "Gameplay perks are disabled for your current team; your membership and cosmetics are unchanged."
+    }
+
+    "Swap Cooldown"
+    {
+        "#format"    "{1:d}"
+        "en"    "Wait {1} seconds before switching teams again."
+    }
+
+    "Swap Unbalanced"
+    {
+        "en"    "That swap would exceed the configured team-size difference."
+    }
+
+    "Trial Reminder"
+    {
+        "#format" "{1:d}"
+        "en" "Your Premium trial ends in {1} seconds."
+    }
+
+    "Team Sentry Limit"
+    {
+        "#format" "{1:d}"
+        "en" "Your team has reached its extra-sentry budget of {1}. Primary sentries and carried-object redeployment remain available."
+    }
+
+    "Rules Failed"
+    {
+        "en" "Premium rules failed to load. Check the error log; flight and teleport are blocked until the file is corrected and reloaded."
+    }
+
+    "Rules Reloaded"
+    {
+        "en" "Premium class/map rules reloaded. Capacity changes apply now; additional ammo/metal requires the next spawn."
+    }
+
+    "Building Slots Full"
+    {
+        "en" "All six building slots are occupied, or the server entity reserve is full. Destroy a building before placing another. Hauling an existing building is still allowed."
+    }
+    "Utility Building Limit"
+    {
+        "#format" "{1:s},{2:d}"
+        "en" "Your {1} limit is {2}. All building types share six slots per Engineer."
+    }
+    "Advertisement No Trial"
+    {
+        "en" "Type !premium to view configured features and access options."
+    }
+    "Points Earned"
+    {
+        "#format" "{1:d},{2:d}"
+        "en" "You earned {1} points for playing. Balance: {2}. Use !premium_shop to browse rentals."
+    }
+    "Points Balance"
+    {
+        "#format" "{1:d}"
+        "en" "Your points balance is {1}."
+    }
+    "Points Pending"
+    {
+        "en" "Points storage is disabled, loading or recovering. No new purchase has been accepted; please try again later."
+    }
+    "Shop Purchased"
+    {
+        "#format" "{1:s},{2:d}"
+        "en" "Purchased {1}. Your points balance is {2}. Rental time counts while offline."
+    }
+    "Shop Declined"
+    {
+        "en" "Purchase declined: your balance or rental/trial limit changed. No points were taken for this request."
+    }
+    "Rental Ended"
+    {
+        "#format" "{1:s}"
+        "en" "Your purchased {1} rental has expired. Other access sources still apply."
+    }
+    "Purchased Trial Ended"
+    {
+        "en" "Your points-bought Premium trial has expired. Other memberships and individual feature grants still apply."
+    }
+}

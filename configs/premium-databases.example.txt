@@ -1,0 +1,22 @@
+// Merge the desired entry into your existing addons/sourcemod/configs/databases.cfg.
+// Do not replace the entire databases.cfg with this example.
+"Databases"
+{
+    // Standard SourceMod SQLite entry, used by default:
+    "storage-local"
+    {
+        "driver" "sqlite"
+        "database" "sourcemod-local"
+    }
+
+    // Optional remote configuration; enable with premium_use_mysql 1.
+    "premium"
+    {
+        "driver" "mysql"
+        "host" "127.0.0.1"
+        "database" "YOUR_DATABASE"
+        "user" "YOUR_USER"
+        "pass" "YOUR_PASSWORD"
+        "port" "3306"
+    }
+}

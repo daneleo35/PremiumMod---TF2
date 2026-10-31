@@ -1,0 +1,14 @@
+tools/sourcemod/
+tools/*.zip
+tools/python-libs/
+tools/reference/
+tools/tf2attributes.smx
+tools/tf2.attributes.txt
+tools/tf2attributes.sp
+tools/*-release.json
+dist/
+tests/*.smx
+tests/tmp/
+**/__pycache__/
+scripting/include/morecolors.inc
+scripting/include/tf2attributes.inc
