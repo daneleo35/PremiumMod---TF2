@@ -19,6 +19,7 @@ enum struct TestSetting
     int IntValue;
 }
 TestSetting cvSentryLimit, cvTeamSentries, cvDispenserLimit, cvEntranceLimit, cvExitLimit;
+TestSetting cvTeamDispensers, cvTeamEntrances, cvTeamExits;
 int g_Teams[3] = {0, 2, 3};
 int TestTeam(int client) { return g_Teams[client]; }
 float TestTime() { return 100.0; }
@@ -187,6 +188,7 @@ int NativeClientUtility(int client, int kind, bool applyTransmit)
 
 public int main()
 {
+    cvTeamDispensers.IntValue = -1; cvTeamEntrances.IntValue = -1; cvTeamExits.IntValue = -1;
     // Aim targets are arbitrary map entities, not necessarily buildings.
     // The host must throw for absent properties, just as SourceMod does.
     char nonBuildings[][] = {"tf_ammo_pack", "func_respawnroomvisualizer", "func_door", "prop_dynamic"};
@@ -450,6 +452,31 @@ public int main()
     Check(g_Disposable[40] && g_TransmitHooked[40], "healthy hook can reacquire the mask after failure");
     g_EdictFlags[40] = FL_EDICT_DONTSEND; RestoreUtilityMasks(1);
     Check((g_EdictFlags[40] & FL_EDICT_DONTSEND) && !g_Disposable[40] && !g_TransmitHooked[40], "later foreign transmit changes survive restoration");
+    for (int kind; kind<3;kind++)
+    {
+        for (int entity=40;entity<80;entity++) g_Valid[entity]=false;
+        RemoveExtraBuildings(1);RemoveExtraBuildings(2);
+        g_Teams[2]=2;cvTeamDispensers.IntValue=1;cvTeamEntrances.IntValue=1;cvTeamExits.IntValue=1;
+        char classname[32];strcopy(classname,sizeof(classname),kind==0?"obj_dispenser":"obj_teleporter");
+        Entity(40,classname);g_Mode[40]=kind==2?1:0;TrackPlacedUtility(1,40);
+        Entity(41,classname);g_Mode[41]=g_Mode[40];TrackPlacedUtility(1,41);
+        Check(CountTeamExtraUtilities(2,kind)==1,"team counts tracked extras only");
+        Entity(42,classname,2);g_Mode[42]=g_Mode[40];TrackPlacedUtility(2,42);
+        Check(g_Valid[42],"team extra cap never prevents another engineer primary");
+        Entity(43,classname,2);g_Mode[43]=g_Mode[40];TrackPlacedUtility(2,43);
+        Check(!g_Valid[43],"placement race cannot exceed shared team extra cap");
+        g_BuilderType=kind==0?0:1;g_BuilderMode=kind==2?1:0;g_Active=80;
+        strcopy(g_Class[80],sizeof(g_Class[]),"tf_weapon_builder");
+        Check(BuildingPlacementBlocked(2),"team cap stops blueprint before metal spending");
+        g_Carrying=true;Check(!BuildingPlacementBlocked(2),"existing carried utility remains redeployable at team cap");g_Carrying=false;
+        cvTeamDispensers.IntValue=0;cvTeamEntrances.IntValue=0;cvTeamExits.IntValue=0;EnforceTeamUtilityCaps();
+        Check(g_Valid[40]&&g_Valid[42]&&!g_Valid[41],"lowering team cap removes extras and preserves both primaries");
+        cvTeamDispensers.IntValue=-1;cvTeamEntrances.IntValue=-1;cvTeamExits.IntValue=-1;
+        Entity(43,classname,2);g_Mode[43]=g_Mode[40];TrackPlacedUtility(2,43);
+        Check(g_Valid[43]&&TeamUtilityRoom(1,kind),"minus one disables team limit");
+        g_Teams[2]=3;
+        Check(CountTeamExtraUtilities(2,kind)==0&&CountTeamExtraUtilities(3,kind)==1,"RED and BLU budgets are independent");
+    }
     PrintToServer("PASS: %d sentry ownership assertions", g_Checks);
     return g_Checks;
 }

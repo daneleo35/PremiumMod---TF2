@@ -52,3 +52,5 @@ RC17 corrects a client-side block that prevented extra dispensers and teleporter
 Hauling, friendly upgrades and teleporter pairing still need checking on a real server, especially with custom maps or other plugins. See the [server test plan](https://github.com/daneleo35/PremiumMod---TF2/blob/main/docs/RC10_SERVER_TEST.md) and [testing guide](Development-and-Testing.md).
 
 [Configuration](Configuration.md) · [Features](Features.md) · [Home](Home.md)
+
+See [RC21 additions](RC21-Additions.md) for the building overview, spawn effects, gifts, specials and team utility limits.

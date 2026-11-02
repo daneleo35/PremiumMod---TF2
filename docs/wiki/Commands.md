@@ -121,3 +121,14 @@ sm_prem_reload
 Settle pending economy operations before changing storage backend settings. `sm_reload_translations` and `sm plugins list` are standard SourceMod commands, not Premium commands.
 
 [Configuration](Configuration.md) · [Troubleshooting](Troubleshooting.md) · [Home](Home.md)
+
+## Buildings and gifts (RC21)
+
+| Command | What it does |
+| --- | --- |
+| `!premium_buildings` | Your placed buildings, with health, level and sapper status. Refresh to update. |
+| `!premium_gift` | Choose a connected player and buy them an individual feature rental. |
+| `!premium_giftpoints` | Choose a connected player and an amount of points to send. |
+| `!premium_giftpoints "Player name" 25` | Open confirmation for an exact points amount; nothing moves until confirmed. |
+
+Gifting has to be enabled by the owner. A feature gift gives only that feature, with no membership or chat tag. Points gifting is separate from the shop's purchase switch. See [RC21 setup](RC21-Additions.md).

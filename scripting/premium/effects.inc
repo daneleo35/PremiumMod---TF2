@@ -48,6 +48,7 @@ void RestoreGameplayEffects(int client)
 
 void RestoreEffects(int client)
 {
+    StopSpawnEffect(client);
     ResetPresentation(client);
     StopGlow(client);
     RestoreGameplayEffects(client);
@@ -205,6 +206,7 @@ public void EventSpawn(Event event, const char[] name, bool dontBroadcast)
     g_Player[client].saved = false;
     ResetMovement(client);
     QueueEffects(client, true);
+    RequestFrame(FrameMemberSpawnEffect, GetClientSerial(client));
 }
 
 public void EventInventory(Event event, const char[] name, bool dontBroadcast)
@@ -219,6 +221,7 @@ public void EventClass(Event event, const char[] name, bool dontBroadcast)
     if (!ValidClient(client)) return;
     StopGlow(client);
     StopCelebration(client);
+    StopSpawnEffect(client);
     RemoveExtraBuildings(client);
     g_BaseMaxHealth[client] = 0;
     g_Player[client].saved = false;
@@ -252,6 +255,7 @@ public void EventRoundStart(Event event, const char[] name, bool dontBroadcast)
 
 public void EventRoundEnd(Event event, const char[] name, bool dontBroadcast)
 {
+    StopSpawnEffects();
     if (StrEqual(name, "teamplay_round_win")) BeginCelebration(event.GetInt("team"));
     g_RoundActive = false;
     for (int client = 1; client <= MaxClients; client++)

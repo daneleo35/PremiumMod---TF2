@@ -31,6 +31,11 @@ enum struct ShopOffer
     int feature; // -1 is a purchased Premium trial, never an individual feature.
     int price;
     int duration;
+    int availableFrom;
+    int availableUntil;
+    int saleFrom;
+    int saleUntil;
+    int discount;
 }
 EconomyClient g_Economy[MAXPLAYERS + 1];
 ShopOffer g_ShopOffers[64];
@@ -42,6 +47,8 @@ ArrayList g_EconomyOutbox;
 ConVar cvPoints, cvPointsEarn, cvPointsShop, cvPointsRentals, cvPointsTrials, cvPointsTrialLimit;
 ConVar cvPointsMinutes, cvPointsReward, cvPointsCap, cvPointsMinPlayers, cvPointsSpectators, cvPointsDead, cvPointsAfk;
 ConVar cvPointsEarnNotice, cvPointsBuyNotice, cvPointsExpiryNotice, cvPointsRenew, cvPointsMaxDays;
+ConVar cvPointsGifts, cvShopSpecials, cvShopPauseMap;
+ConVar cvPointsTransfers, cvTransferMax, cvTransferDaily;
 
 int EconomyRentalMask(int client)
 {

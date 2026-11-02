@@ -109,6 +109,53 @@ bool IsBonusUtility(int client, int kind, int reference)
     return false;
 }
 
+int TeamUtilityCap(int kind)
+{
+    return kind == 0 ? cvTeamDispensers.IntValue : (kind == 1 ? cvTeamEntrances.IntValue : cvTeamExits.IntValue);
+}
+
+int CountTeamExtraUtilities(int team, int kind)
+{
+    int count;
+    for (int client = 1; client <= MaxClients; client++)
+    {
+        if (!ValidClient(client) || GetClientTeam(client) != team) continue;
+        for (int slot; slot < 3; slot++) if (OwnedUtilityKind(client, g_ExtraUtilities[client][kind][slot]) == kind) count++;
+    }
+    return count;
+}
+
+bool TeamUtilityRoom(int client, int kind)
+{
+    int cap = TeamUtilityCap(kind);
+    return cap < 0 || CountTeamExtraUtilities(GetClientTeam(client), kind) < cap;
+}
+
+void EnforceTeamUtilityCaps()
+{
+    for (int team = 2; team <= 3; team++) for (int kind; kind < 3; kind++)
+    {
+        int cap = TeamUtilityCap(kind);
+        if (cap < 0) continue;
+        int count = CountTeamExtraUtilities(team, kind);
+        while (count > cap)
+        {
+            int owner, chosen, newest = -1;
+            for (int client = 1; client <= MaxClients; client++)
+            {
+                if (!ValidClient(client) || GetClientTeam(client) != team) continue;
+                for (int slot; slot < 3; slot++)
+                    if (OwnedUtilityKind(client, g_ExtraUtilities[client][kind][slot]) == kind && g_UtilityOrder[client][kind][slot] > newest)
+                    { owner = client; chosen = slot; newest = g_UtilityOrder[client][kind][slot]; }
+            }
+            if (!owner) break;
+            int reference = g_ExtraUtilities[owner][kind][chosen];
+            g_ExtraUtilities[owner][kind][chosen] = INVALID_ENT_REFERENCE;
+            RestoreUtilityMasks(owner); RemoveEntity(EntRefToEntIndex(reference)); count--;
+        }
+    }
+}
+
 void RestoreUtilityMasks(int client)
 {
     for (int slot; slot < 6; slot++)
@@ -151,7 +198,7 @@ void UpdateUtilityPda(int client, int weapon = -1)
                 if (PlacedUtility(client, entity, kind) && GetEntProp(entity, Prop_Send, "m_bCarried")) { carried = entity; break; }
             if (carried == -1) continue;
         }
-        else if (CountUtilities(client, kind) >= UtilityLimit(client, kind)) continue;
+        else if (CountUtilities(client, kind) >= UtilityLimit(client, kind) || !TeamUtilityRoom(client, kind)) continue;
         entity = -1;
         while ((entity = FindEntityByClassname(entity, kind == 0 ? "obj_dispenser" : "obj_teleporter")) != -1 && slot < 6)
         {
@@ -183,6 +230,7 @@ void BuildingLimitNotice(int client, int kind, bool total)
     if (GetGameTime() < g_NextBuildingNotice[client]) return;
     g_NextBuildingNotice[client] = GetGameTime() + 2.0;
     if (total) Tell(client, "%t", "Building Slots Full");
+    else if (kind >= 0 && CountUtilities(client, kind) > 0 && !TeamUtilityRoom(client, kind)) Tell(client, "Your team's extra %s limit is full (%d). Ordinary buildings are still allowed.", kind == 0 ? "dispenser" : (kind == 1 ? "entrance" : "exit"), TeamUtilityCap(kind));
     else Tell(client, "%t", "Utility Building Limit", kind == 0 ? "dispenser" : (kind == 1 ? "teleporter entrance" : "teleporter exit"), UtilityLimit(client, kind));
 }
 
@@ -201,6 +249,7 @@ bool BuildingPlacementBlocked(int client)
     bool total = CountOwnedBuildings(client, false) >= 6 || GetEntityCount() >= GetMaxEntities() - 32;
     bool limit = kind >= 0 ? CountUtilities(client, kind) >= UtilityLimit(client, kind)
         : CountOwnedBuildings(client) >= (ExtraSentryAllowed(client) ? cvSentryLimit.IntValue : 1);
+    if (kind >= 0 && CountUtilities(client, kind) > 0 && !TeamUtilityRoom(client, kind)) limit = true;
     if (total || limit)
     {
         RestoreBuildingPda(client);
@@ -229,7 +278,8 @@ public Action LimitNativeBuildings(int client, const char[] command, int args)
     if (HasEntProp(client, Prop_Send, "m_bCarryingObject") && GetEntProp(client, Prop_Send, "m_bCarryingObject"))
     { UpdateUtilityPda(client, GetPlayerWeaponSlot(client, 3)); return Plugin_Continue; }
     bool total = CountOwnedBuildings(client, false) >= 6 || GetEntityCount() >= GetMaxEntities() - 32;
-    if (total || CountUtilities(client, kind) >= UtilityLimit(client, kind))
+    if (total || CountUtilities(client, kind) >= UtilityLimit(client, kind)
+        || (CountUtilities(client, kind) > 0 && !TeamUtilityRoom(client, kind)))
     {
         RestoreBuildingPda(client); BuildingLimitNotice(client, kind, total);
         return Plugin_Handled;
@@ -250,6 +300,7 @@ void TrackPlacedUtility(int client, int entity)
     if (CountOwnedBuildings(client, false) > 6 || CountUtilities(client, kind) > UtilityLimit(client, kind))
     { RemoveEntity(entity); return; }
     if (!primary) return;
+    if (!TeamUtilityRoom(client, kind)) { RemoveEntity(entity); BuildingLimitNotice(client, kind, false); return; }
     for (int slot; slot < 3; slot++)
     {
         if (OwnedUtilityKind(client, g_ExtraUtilities[client][kind][slot]) == kind) continue;

@@ -40,6 +40,7 @@ void UiHome(int client)
     menu.AddItem("looks", "Appearance");
     menu.AddItem("shop", cvPoints.BoolValue && cvPointsShop.BoolValue ? "Points shop & my purchases" : "Points & my purchases");
     menu.AddItem("actions", "Actions & free trial");
+    if (cvBuildingOverview.BoolValue && TF2_GetPlayerClass(client) == TFClass_Engineer) menu.AddItem("buildings", "My buildings: health & sappers");
     menu.AddItem("options", "Personal settings");
     if (UiAdmin(client)) menu.AddItem("admin", "Admin controls");
     menu.Display(client, 60);
@@ -56,6 +57,7 @@ public int UiHomeSelected(Menu menu, MenuAction action, int client, int selectio
         else if (StrEqual(key, "looks")) UiAppearance(client);
         else if (StrEqual(key, "shop")) UiWallet(client);
         else if (StrEqual(key, "actions")) UiActions(client);
+        else if (StrEqual(key, "buildings")) DisplayBuildingOverview(client);
         else if (StrEqual(key, "options")) DisplayOptions(client);
         else if (StrEqual(key, "admin")) UiAdminHome(client);
     }
@@ -242,6 +244,7 @@ void UiWallet(int client)
         else FormatEx(title, sizeof(title), "Points & purchases\nBalance: %d points\nEarning is paused by the owner\n ", g_Economy[client].points);
     }
     menu.SetTitle(title); menu.AddItem("shop", cvPoints.BoolValue && cvPointsShop.BoolValue ? "Browse the shop" : "Shop: switched off", cvPoints.BoolValue && cvPointsShop.BoolValue ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED);
+    if (cvPoints.BoolValue && cvPointsTransfers.BoolValue) menu.AddItem("transfer", "Gift points to a player");
     int now = GetTime(), shown;
     if (g_Economy[client].loaded)
     {
@@ -261,7 +264,7 @@ public int UiWalletSelected(Menu menu, MenuAction action, int client, int select
     if (action == MenuAction_End) delete menu;
     else if (action == MenuAction_Cancel && selection == MenuCancel_ExitBack && ValidClient(client)) UiHome(client);
     else if (action == MenuAction_Select && ValidClient(client))
-    { char key[12]; menu.GetItem(selection, key, sizeof(key)); if (StrEqual(key, "shop")) DisplayPointsShop(client); else { if (cvPoints.BoolValue && !g_Economy[client].loaded) EconomyAvailable(client); UiWallet(client); } }
+    { char key[12]; menu.GetItem(selection, key, sizeof(key)); if (StrEqual(key, "transfer")) UiTransferPlayers(client); else if (StrEqual(key, "shop")) DisplayPointsShop(client); else { if (cvPoints.BoolValue && !g_Economy[client].loaded) EconomyAvailable(client); UiWallet(client); } }
     return 0;
 }
 

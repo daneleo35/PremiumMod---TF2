@@ -18,3 +18,5 @@
 - [Building and testing](Development-and-Testing.md)
 
 [Source](https://github.com/daneleo35/PremiumMod---TF2) · [Report an issue](https://github.com/daneleo35/PremiumMod---TF2/issues)
+
+- [RC21 additions](RC21-Additions.md)

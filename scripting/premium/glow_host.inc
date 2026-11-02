@@ -101,7 +101,7 @@ void GlowHostFailure(int client)
 
 public void TF2_OnConditionAdded(int client, TFCond condition)
 {
-    if (client > 0 && client <= MaxClients && GlowHiddenCondition(condition)) { StopGlow(client); StopCelebration(client); }
+    if (client > 0 && client <= MaxClients && GlowHiddenCondition(condition)) { StopGlow(client); StopCelebration(client); StopSpawnEffect(client); }
 }
 
 public void TF2_OnConditionRemoved(int client, TFCond condition)

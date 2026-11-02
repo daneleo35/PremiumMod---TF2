@@ -12,6 +12,8 @@ void UiShopHome(int client)
     Menu menu = new Menu(UiShopHomeSelected); menu.SetTitle("Points shop\nYour balance: %d points\nChoose a category\n ", g_Economy[client].points);
     menu.AddItem("0", "Cosmetics"); menu.AddItem("1", "Gameplay features"); menu.AddItem("2", "Engineer features");
     menu.AddItem("3", cvPointsTrials.BoolValue ? "Premium trials" : "Premium trials (switched off)");
+    if (cvPointsGifts.BoolValue) menu.AddItem("gift", "Gift a feature rental");
+    if (cvPointsTransfers.BoolValue) menu.AddItem("transfer", "Gift points to a player");
     menu.AddItem("wallet", "My balance & active purchases");
     menu.ExitBackButton = true; menu.Display(client, 60);
 }
@@ -20,7 +22,7 @@ public int UiShopHomeSelected(Menu menu, MenuAction action, int client, int sele
     if (action == MenuAction_End) delete menu;
     else if (action == MenuAction_Cancel && selection == MenuCancel_ExitBack && ValidClient(client)) UiHome(client);
     else if (action == MenuAction_Select && ValidClient(client))
-    { char data[12]; int category; menu.GetItem(selection, data, sizeof(data)); if (StrEqual(data, "wallet")) UiWallet(client); else if (PremiumUiIndex(data, 4, category)) UiShopOffers(client, category); }
+    { char data[12]; int category; menu.GetItem(selection, data, sizeof(data)); if (StrEqual(data, "transfer")) UiTransferPlayers(client); else if (StrEqual(data, "gift")) UiGiftPlayers(client); else if (StrEqual(data, "wallet")) UiWallet(client); else if (PremiumUiIndex(data, 4, category)) UiShopOffers(client, category); }
     return 0;
 }
 void UiShopOffers(int client, int category)
@@ -34,9 +36,10 @@ void UiShopOffers(int client, int category)
     {
         if (UiShopCategory(g_ShopOffers[i].feature) != category) continue;
         char data[64], label[192], duration[32], reason[192]; PremiumUiDuration(g_ShopOffers[i].duration, duration, sizeof(duration));
-        FormatEx(data, sizeof(data), "%d:%d", g_ShopRevision, i);
+        int price = ShopOfferPrice(i);
+        FormatEx(data, sizeof(data), "%d:%d:%d", g_ShopRevision, i, price);
         bool available = ShopCanBuy(client, i, reason, sizeof(reason));
-        FormatEx(label, sizeof(label), "%s | %d points / %s%s", g_ShopOffers[i].name, g_ShopOffers[i].price, duration, available ? "" : " (view limits)");
+        FormatEx(label, sizeof(label), "%s | %d points / %s%s%s", g_ShopOffers[i].name, price, duration, price < g_ShopOffers[i].price ? " (sale)" : "", available ? "" : " (view limits)");
         menu.AddItem(data, label); shown++;
     }
     if (!shown) menu.AddItem("empty", "No offers in this category", ITEMDRAW_DISABLED);

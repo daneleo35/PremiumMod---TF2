@@ -6,6 +6,18 @@ int g_Checks;
 void Check(bool condition, const char[] label) { g_Checks++; if (!condition) ThrowError("FAIL: %s", label); }
 public int main()
 {
+    Check(EconomyWindow(100,100,101) && !EconomyWindow(101,100,101),"schedule includes start and excludes end");
+    Check(EconomyWindow(100,0,0) && !EconomyWindow(99,100,0),"optional unbounded windows and future start");
+    Check(EconomySalePrice(101,25)==76 && EconomySalePrice(1,99)==1,"discounts round up and never become free");
+    Check(EconomySalePrice(1000000,99)==10000 && EconomySalePrice(100,0)==100,"price arithmetic remains within bounds");
+    Check(!EconomySalePrice(1,100) && !EconomySalePrice(2147483647,1),"invalid discount and overflowing base price rejected");
+    for (int i; i<view_as<int>(Feature_Count);i++)
+    {
+        bool blocked=i==view_as<int>(Feature_Flight)||i==view_as<int>(Feature_Airblast)||i==view_as<int>(Feature_Teleport);
+        Check(EconomyMapAllows(i,false,false,true)==!blocked,"map pause covers only map-disabled features");
+        Check(EconomyMapAllows(i,false,false,false),"owner can disable map purchase pause");
+    }
+    Check(EconomyGiftSteam("[U:1:4294967295]") && !EconomyGiftSteam("[U:1:4294967296]") && !EconomyGiftSteam("[U:1:0]") && !EconomyGiftSteam("[U:1:01]"),"gift identity is canonical and bounded");
     Check(EconomyDuration(1, "minutes") == 60 && EconomyDuration(2, "hours") == 7200 && EconomyDuration(3, "days") == 259200, "configured time units convert exactly");
     Check(EconomyDuration(365, "days") == 31536000 && EconomyDuration(525600, "minutes") == 31536000, "one-year duration accepted without overflow");
     Check(EconomyDuration(366, "days") == 0 && EconomyDuration(2147483647, "hours") == 0, "overflowing or over-year offers rejected");
@@ -49,5 +61,11 @@ public int main()
     op.feature = view_as<int>(Feature_Glow); Check(!EconomyOperationValid(op), "trial receipt cannot impersonate a rental"); op.feature = -1;
     op.duration = 2147483647; Check(!EconomyOperationValid(op), "corrupt journal duration cannot overflow deadlines"); op.duration = 3600;
     op.price = -1; Check(!EconomyOperationValid(op), "corrupt journal prices cannot create points");
+    op.price=10;op.kind=Economy_Gift;op.feature=view_as<int>(Feature_Glow);strcopy(op.steam,sizeof(op.steam),"[U:1:85]");strcopy(op.recipient,sizeof(op.recipient),"[U:1:86]");
+    Check(EconomyOperationValid(op),"gift intent preserves beneficiary");
+    strcopy(op.recipient,sizeof(op.recipient),op.steam);Check(!EconomyOperationValid(op),"self gifts rejected at durable boundary");
+    strcopy(op.recipient,sizeof(op.recipient),"[U:1:86]");op.kind=Economy_Transfer;op.feature=-1;op.transferDaily=500;
+    Check(EconomyOperationValid(op),"points transfer has distinct operation without feature access");
+    op.transferDaily=-1;Check(!EconomyOperationValid(op),"negative persisted daily limit rejected");
     PrintToServer("PASS: %d points economy policy assertions", g_Checks); return g_Checks;
 }

@@ -119,14 +119,40 @@ public void EconomyCommitted(Database db, any data, int count, DBResultSet[] res
         if (GetClientSerial(client) == op.buyerSerial) g_Economy[client].purchasing = false;
         if (committed && op.kind == Economy_Earn && delta > 0 && cvPoints.BoolValue && cvEnable.BoolValue && cvPointsEarnNotice.BoolValue && !g_Options[client].quiet)
             EconomyChat(client, "%t", "Points Earned", delta, points);
-        if (op.kind == Economy_Rent || op.kind == Economy_Trial)
+        if (op.kind == Economy_Rent || op.kind == Economy_Trial || op.kind == Economy_Gift)
         {
-            if (committed && cvPoints.BoolValue && cvEnable.BoolValue && cvPointsBuyNotice.BoolValue) EconomyChat(client, "%t", "Shop Purchased", op.kind == Economy_Trial ? "Premium trial" : g_FeatureKeys[op.feature], points);
+            if (committed && op.kind == Economy_Gift && cvPointsBuyNotice.BoolValue) EconomyChat(client, "Gift saved: %s for %s. Your balance: %d points.", g_FeatureKeys[op.feature], op.recipient, points);
+            else if (committed && cvPoints.BoolValue && cvEnable.BoolValue && cvPointsBuyNotice.BoolValue) EconomyChat(client, "%t", "Shop Purchased", op.kind == Economy_Trial ? "Premium trial" : g_FeatureKeys[op.feature], points);
             else if (!committed) EconomyChat(client, "%t", "Shop Declined");
+        }
+        if (op.kind == Economy_Transfer)
+        {
+            if (committed) EconomyChat(client, "Sent %d points to %s. Your balance: %d.", op.price, op.recipient, points);
+            else EconomyChat(client, "Points gift declined: balance, recipient capacity or daily limit changed. Nothing was transferred.");
         }
         if (committed && op.kind == Economy_Rent) g_Economy[client].rentalNotices |= PremiumFeatureBit(view_as<PremiumFeature>(op.feature));
         if (committed && op.kind == Economy_Trial) g_Economy[client].trialNotice = true;
         RefreshClient(client);
+    }
+    if (committed && (op.kind == Economy_Gift || op.kind == Economy_Transfer))
+    {
+        for (int recipient = 1; recipient <= MaxClients; recipient++)
+        {
+            if (!ValidClient(recipient) || !StrEqual(g_Economy[recipient].steam, op.recipient)) continue;
+            // Cancel any pre-commit load so it cannot overwrite the new grant.
+            g_Economy[recipient].epoch++; g_Economy[recipient].loading = false;
+            if (op.kind == Economy_Gift)
+            {
+                g_Economy[recipient].rentalUntil[op.feature] = expiry;
+                g_Economy[recipient].rentalNotices |= 1 << op.feature;
+            }
+            // Keep existing rentals available while the wallet reloads. Marking
+            // the account unloaded here would briefly revoke unrelated perks.
+            LoadEconomyClient(recipient); RefreshClient(recipient);
+            if (op.kind == Economy_Transfer && !g_Options[recipient].quiet) EconomyChat(recipient, "You received %d points from %s.", op.price, op.steam);
+            else if (cvPointsBuyNotice.BoolValue && !g_Options[recipient].quiet)
+                EconomyChat(recipient, "You received a %s rental from %s. Use !premium to view it.", g_FeatureKeys[op.feature], op.steam);
+        }
     }
     int actor = ResolveActor(op.actorSerial);
     if (op.kind == Economy_Adjust && actor >= 0) Tell(actor, "Points adjustment settled for %s: change %d, balance %d.", op.steam, delta, points);

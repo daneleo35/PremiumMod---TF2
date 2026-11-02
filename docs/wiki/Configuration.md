@@ -2,7 +2,7 @@
 
 The bundled main config has numbered sections, aligned values and short comments. Switches normally use `0` for off and `1` for on; exceptions are labelled. Keep quoted values and setting names intact.
 
-You can also edit 91 numeric settings through `!premium_admin` → Server settings. Apply changes live, then explicitly Save to keep them. The saved block runs last in the main file; see [In-game menus](In-Game-Menus.md).
+You can also edit 105 numeric settings through `!premium_admin` → Server settings. Apply changes live, then explicitly Save to keep them. The saved block runs last in the main file; see [In-game menus](In-Game-Menus.md).
 
 ## Which file to edit
 
@@ -130,3 +130,5 @@ Editing the file alone does not execute it. `sm_prem_reload` updates currently l
 Before changing database/backend settings, read [Storage/recovery](Storage-and-Recovery.md) and settle pending purchases. Keep customised values when upgrading instead of blindly copying new defaults.
 
 [All setting defaults](Configuration-Reference.md) · [Home](Home.md)
+
+See [RC21 additions](RC21-Additions.md) for the building overview, spawn effects, gifts, specials and team utility limits.

@@ -4,7 +4,32 @@
 #define _premium_economy_policy_included
 #include "feature_policy.inc"
 
-enum EconomyKind { Economy_Earn, Economy_Rent, Economy_Trial, Economy_Adjust }
+enum EconomyKind { Economy_Earn, Economy_Rent, Economy_Trial, Economy_Adjust, Economy_Gift, Economy_Transfer }
+
+stock bool EconomyWindow(int now, int from, int until)
+{
+    return (from == 0 || now >= from) && (until == 0 || now < until);
+}
+stock int EconomySalePrice(int price, int percent)
+{
+    if (price < 1 || price > 1000000 || percent < 0 || percent > 99) return 0;
+    return (price * (100 - percent) + 99) / 100;
+}
+stock bool EconomyMapAllows(int feature, bool flight, bool teleport, bool pause)
+{
+    if (!pause) return true;
+    if (feature == view_as<int>(Feature_Flight) || feature == view_as<int>(Feature_Airblast)) return flight;
+    if (feature == view_as<int>(Feature_Teleport)) return teleport;
+    return true;
+}
+stock bool EconomyGiftSteam(const char[] steam)
+{
+    int length = strlen(steam);
+    if (length < 7 || length > 16 || StrContains(steam, "[U:1:") != 0 || steam[length - 1] != ']') return false;
+    if (steam[5] == '0' || (length == 16 && strcmp(steam[5], "4294967295]") > 0)) return false;
+    for (int i = 5; i < length - 1; i++) if (steam[i] < '0' || steam[i] > '9') return false;
+    return true;
+}
 stock bool EconomyTokenValid(const char[] token)
 {
     if (strlen(token) != 32) return false;
@@ -48,6 +73,7 @@ enum struct EconomyOperation
 {
     char token[33];
     char steam[32];
+    char recipient[32]; // Empty for pre-gift journal entries and self purchases.
     char backend[64];
     EconomyKind kind;
     int feature;
@@ -62,18 +88,25 @@ enum struct EconomyOperation
     bool renew;
     int actorSerial;
     int buyerSerial;
+    int transferDaily;
 }
 
 stock bool EconomyOperationValid(EconomyOperation op)
 {
-    if (!EconomyTokenValid(op.token) || !op.backend[0] || op.kind < Economy_Earn || op.kind > Economy_Adjust
+    if (!EconomyTokenValid(op.token) || !op.backend[0] || op.kind < Economy_Earn || op.kind > Economy_Transfer
         || op.cap < 1 || op.cap > 1000000000 || op.price < 0 || op.price > 1000000
         || op.seconds < -1000000 || op.seconds > 1000000 || op.interval < 60 || op.interval > 86400
         || op.reward < 1 || op.reward > 1000000 || op.duration < 0 || op.duration > 31536000
-        || op.maxDays < 1 || op.maxDays > 365 || op.trialLimit < 0 || op.trialLimit > 10000) return false;
-    if (op.kind != Economy_Rent && op.feature != -1) return false;
+        || op.maxDays < 1 || op.maxDays > 365 || op.trialLimit < 0 || op.trialLimit > 10000
+        || op.transferDaily < 0 || op.transferDaily > 1000000000) return false;
+    if (op.kind != Economy_Rent && op.kind != Economy_Gift && op.feature != -1) return false;
     if (op.kind == Economy_Earn && op.seconds < 0) return false;
-    if (op.kind == Economy_Rent && (op.feature < 0 || op.feature >= view_as<int>(Feature_Count))) return false;
-    if ((op.kind == Economy_Rent || op.kind == Economy_Trial) && (op.price < 1 || op.duration < 60)) return false;
+    if ((op.kind == Economy_Rent || op.kind == Economy_Gift) && (op.feature < 0 || op.feature >= view_as<int>(Feature_Count))) return false;
+    if ((op.kind == Economy_Rent || op.kind == Economy_Trial || op.kind == Economy_Gift) && (op.price < 1 || op.duration < 60)) return false;
+    if (op.kind == Economy_Gift || op.kind == Economy_Transfer)
+    {
+        if (!EconomyGiftSteam(op.recipient) || StrEqual(op.steam, op.recipient)) return false;
+    }
+    if (op.kind == Economy_Transfer && (op.price < 1 || op.feature != -1)) return false;
     return true;
 }

@@ -62,7 +62,7 @@ sm_premium_diagnostics
 premium_version
 ```
 
-Check that the version is `3.0.0-rc20` and there are no Premium or TF2Attributes errors. The player database may take a moment to finish loading.
+Check that the version is `3.0.0-rc21` and there are no Premium or TF2Attributes errors. The player database may take a moment to finish loading.
 
 Test with an ordinary player as well as a member. An admin with full access may automatically qualify for Premium, so testing only with your own admin account will not show what everyone else gets.
 

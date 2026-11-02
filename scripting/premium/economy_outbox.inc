@@ -8,6 +8,8 @@ bool SaveEconomyOutbox()
     {
         EconomyOperation op; g_EconomyOutbox.GetArray(i, op, sizeof(op)); file.JumpToKey(op.token, true);
         file.SetString("steam", op.steam); file.SetString("backend", op.backend); file.SetNum("kind", view_as<int>(op.kind));
+        file.SetString("recipient", op.recipient);
+        file.SetNum("transfer_daily", op.transferDaily);
         file.SetString("feature", op.feature < 0 ? "trial" : g_FeatureKeys[op.feature]);
         file.SetNum("seconds", op.seconds); file.SetNum("interval", op.interval); file.SetNum("reward", op.reward);
         file.SetNum("cap", op.cap); file.SetNum("price", op.price); file.SetNum("duration", op.duration);
@@ -41,6 +43,8 @@ void InitializeEconomyOutbox()
         file.GetSectionName(op.token, sizeof(op.token)); file.GetString("steam", steam, sizeof(steam));
         file.GetString("backend", op.backend, sizeof(op.backend)); file.GetString("feature", feature, sizeof(feature));
         op.feature = StrEqual(feature, "trial") ? -1 : PremiumFeatureIndex(feature); op.kind = view_as<EconomyKind>(file.GetNum("kind", -1));
+        file.GetString("recipient", op.recipient, sizeof(op.recipient));
+        op.transferDaily = file.GetNum("transfer_daily");
         op.seconds = file.GetNum("seconds"); op.interval = file.GetNum("interval"); op.reward = file.GetNum("reward");
         op.cap = file.GetNum("cap"); op.price = file.GetNum("price"); op.duration = file.GetNum("duration");
         op.maxDays = file.GetNum("max_days"); op.trialLimit = file.GetNum("trial_limit"); op.renew = file.GetNum("renew") != 0;

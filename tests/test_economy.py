@@ -38,13 +38,13 @@ class SQLHost(TestHost):
 
 def queries(kind, *, seconds=0, interval=600, reward=5, cap=1000000, price=10,
             duration=3600, renew=1, limit=1, days=365, now=100000, nonce=1,
-            player=85, feature=8, mysql=0):
-    if kind != 1: feature = -1
+            player=85, feature=8, mysql=0, recipient=86, daily=0):
+    if kind not in (1, 4): feature = -1
     CAPTURE.clear()
     with (ROOT/'tests/economy_queries.smx').open('rb') as stream:
         plugin = SourcePawnPlugin(stream, smsys_options={'natives_cls': SQLHost})
     plugin.runtime.call_function_by_name('Emit', kind, seconds, interval, reward, cap,
-        price, duration, renew, limit, days, now, nonce, player, feature, mysql)
+        price, duration, renew, limit, days, now, nonce, player, feature, mysql, recipient, daily)
     return list(CAPTURE)
 
 def execute(db, statements):
@@ -62,6 +62,74 @@ def execute(db, statements):
         raise
 
 class EconomyIntegration(unittest.TestCase):
+    def test_gift_debits_sender_and_grants_only_recipient_once(self):
+        intent = queries(4, price=75)
+        first = execute(self.db, intent)
+        self.assertEqual((25, 103600, 1), (first[0], first[5], first[7]))
+        self.assertEqual(first, execute(self.db, intent))
+        self.assertEqual(0, self.db.execute("SELECT points FROM premium_v3_wallets WHERE steamid='[U:1:86]'").fetchone()[0])
+        self.assertEqual([('[U:1:86]', 'glow', 103600)], self.db.execute('SELECT * FROM premium_v3_rentals').fetchall())
+
+    def test_gift_decline_is_permanent_and_never_grants_feature(self):
+        intent = queries(4, price=200)
+        self.assertEqual(0, execute(self.db, intent)[7])
+        execute(self.db, queries(3, seconds=500, nonce=2))
+        self.assertEqual(0, execute(self.db, intent)[7])
+        self.assertEqual(0, self.db.execute('SELECT expires FROM premium_v3_rentals').fetchone()[0])
+        self.assertEqual(600, self.db.execute("SELECT points FROM premium_v3_wallets WHERE steamid='[U:1:85]'").fetchone()[0])
+
+    def test_gift_renewal_uses_recipient_deadline_and_limit(self):
+        execute(self.db, queries(4))
+        self.assertEqual(0, execute(self.db, queries(4, nonce=2, renew=0))[7])
+        self.assertEqual(107200, execute(self.db, queries(4, nonce=3))[5])
+        self.assertEqual(0, execute(self.db, queries(4, nonce=4, days=1, duration=86400))[7])
+
+    def test_points_transfer_is_atomic_and_replay_safe(self):
+        intent = queries(5, price=75)
+        self.assertEqual((25, -75, 1), tuple(execute(self.db, intent)[i] for i in (0, 6, 7)))
+        self.assertEqual(75, self.db.execute("SELECT points FROM premium_v3_wallets WHERE steamid='[U:1:86]'").fetchone()[0])
+        execute(self.db, intent)
+        self.assertEqual(100, self.db.execute('SELECT SUM(points) FROM premium_v3_wallets').fetchone()[0])
+        self.assertEqual(0, self.db.execute('SELECT COUNT(*) FROM premium_v3_rentals').fetchone()[0])
+
+    def test_points_transfer_daily_limit_survives_new_intents_and_resets_utc(self):
+        self.assertEqual(1, execute(self.db, queries(5, price=40, daily=50))[7])
+        self.assertEqual(0, execute(self.db, queries(5, price=20, daily=50, nonce=2))[7])
+        self.assertEqual(1, execute(self.db, queries(5, price=10, daily=50, nonce=3))[7])
+        self.assertEqual(1, execute(self.db, queries(5, price=20, daily=50, nonce=4, now=172800))[7])
+        self.assertEqual(100, self.db.execute('SELECT SUM(points) FROM premium_v3_wallets').fetchone()[0])
+
+    def test_recipient_cap_and_insufficient_balance_decline_without_losing_points(self):
+        self.assertEqual(0, execute(self.db, queries(5, price=50, cap=40))[7])
+        self.assertEqual(0, execute(self.db, queries(5, price=200, nonce=2))[7])
+        self.assertEqual(100, self.db.execute('SELECT SUM(points) FROM premium_v3_wallets').fetchone()[0])
+
+    def test_transfer_failure_after_debit_rolls_back_both_balances(self):
+        statements = queries(5, price=75)
+        credit = next(i for i, q in enumerate(statements) if 'SET points = points + ' in q)
+        statements.insert(credit, 'INSERT INTO missing_table VALUES (1)')
+        with self.assertRaises(sqlite3.OperationalError): execute(self.db, statements)
+        self.assertEqual([(100,)], self.db.execute('SELECT points FROM premium_v3_wallets').fetchall())
+        self.assertEqual(0, self.db.execute('SELECT COUNT(*) FROM premium_v3_receipts').fetchone()[0])
+
+    def test_concurrent_senders_cannot_overfill_recipient(self):
+        self.db.execute("INSERT INTO premium_v3_wallets (steamid, points) VALUES ('[U:1:87]',100)")
+        intents = [queries(5, price=75, cap=100, player=85, nonce=1), queries(5, price=75, cap=100, player=87, nonce=2)]
+        barrier = threading.Barrier(2)
+        def buy(intent):
+            with closing(sqlite3.connect(self.path, isolation_level=None, timeout=10)) as db:
+                barrier.wait(timeout=5); return execute(db, intent)[7]
+        with ThreadPoolExecutor(max_workers=2) as pool:
+            self.assertEqual([0,1], sorted(pool.map(buy, intents)))
+        self.assertEqual(75, self.db.execute("SELECT points FROM premium_v3_wallets WHERE steamid='[U:1:86]'").fetchone()[0])
+        self.assertEqual(200, self.db.execute('SELECT SUM(points) FROM premium_v3_wallets').fetchone()[0])
+
+    def test_mysql_gifts_and_transfers_use_joined_wallet_updates(self):
+        for kind in (4,5):
+            statements = queries(kind, mysql=1)
+            self.assertTrue(any('UPDATE premium_v3_wallets r JOIN premium_v3_wallets b' in q for q in statements))
+            self.assertFalse(any('UPDATE premium_v3_wallets SET' in q and 'SELECT 1 FROM premium_v3_wallets b' in q for q in statements))
+
     def setUp(self):
         scratch = ROOT/'tests/tmp'; scratch.mkdir(exist_ok=True)
         self.directory = tempfile.TemporaryDirectory(prefix='points-', dir=scratch)

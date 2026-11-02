@@ -14,7 +14,7 @@ class MenuCatalogChecks(unittest.TestCase):
         text, count, editors = render()
         self.assertEqual(text, (ROOT/'scripting/premium/ui_settings_data.inc').read_text(encoding='utf-8'))
         self.assertEqual(count, sum(len(settings) for _, _, settings in SECTIONS[:-1]))
-        self.assertEqual(editors, 91)
+        self.assertEqual(editors, 105)
         self.assertNotIn('"premium_database"', text)
         self.assertNotIn('"premium_use_mysql"', text)
 
@@ -33,7 +33,7 @@ class MenuCatalogChecks(unittest.TestCase):
         text = (ROOT/'scripting/premium/economy.inc').read_text()
         handler = text.split('public int PointsPurchaseSelected(', 1)[1].split('public Action CommandPointsShop', 1)[0]
         self.assertNotIn('selection == 0', handler)
-        self.assertIn('ShopMenuItem(menu, selection, index)', handler)
+        self.assertIn('ShopMenuItem(menu, selection, index, true)', handler)
         self.assertIn('ShopCanBuy(client, index, reason, sizeof(reason))', handler)
         self.assertIn('QueueEconomyOperation(op)', handler)
 

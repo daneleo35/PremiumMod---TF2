@@ -22,6 +22,7 @@ bool CosmeticOwnerVisible(int client) { return g_Visible[client]; }
 bool GlowHostExists(int reference) { return reference >= 1001 && reference <= 1004 && g_Entities[reference - 1000]; }
 void GlowHostDestroy(int reference) { if (GlowHostExists(reference)) { g_Entities[reference - 1000] = false; g_Destroys++; } }
 void StopGlow(int client) { if (client > 0 && client < 5) g_Stops++; }
+void StopSpawnEffect(int client) { if (client < 1) ThrowError("invalid spawn cleanup"); }
 int GlowHostCreate(int client, const char[] effect, int slot)
 {
     if (!g_Allocate) return INVALID_ENT_REFERENCE;

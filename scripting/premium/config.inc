@@ -70,6 +70,10 @@ void CreateConfiguration()
     cvEntranceLimit = Setting("premium_teleporter_entrance_limit", "3", "Maximum teleporter entrances (1-3); entrances and exits each consume one of six total building slots", 1.0, 3.0);
     cvExitLimit = Setting("premium_teleporter_exit_limit", "3", "Maximum teleporter exits (1-3); three complete pairs require all six building slots", 1.0, 3.0);
     cvTeamSentries = Setting("premium_team_extra_sentries", "4", "Extra sentries per team; primary guns do not count; 0 disables extras", 0.0, 32.0);
+    cvTeamDispensers = Setting("premium_team_extra_dispensers", "-1", "Extra dispensers per team; -1 unlimited, 0 no extras; ordinary buildings excluded", -1.0, 128.0);
+    cvTeamEntrances = Setting("premium_team_extra_entrances", "-1", "Extra teleporter entrances per team; -1 unlimited, 0 no extras", -1.0, 128.0);
+    cvTeamExits = Setting("premium_team_extra_exits", "-1", "Extra teleporter exits per team; -1 unlimited, 0 no extras", -1.0, 128.0);
+    cvBuildingOverview = Setting("premium_building_overview", "1", "Allow owner-only building health, level and sapper overview menu", 0.0, 1.0);
     cvEngineerHud = Setting("premium_engineer_hud", "1", "Owner-only native turret tooltip while aiming; no large HUD overlay", 0.0, 1.0);
     cvSentryLabels = Setting("premium_sentry_labels", "1", "Include primary/extra role in the native turret tooltip", 0.0, 1.0);
     cvReminders = Setting("premium_trial_reminders", "1", "Optional trial reminders at 5 minutes, 1 minute and 10 seconds", 0.0, 1.0);
@@ -78,6 +82,10 @@ void CreateConfiguration()
     cvCelebration = Setting("premium_round_celebration", "1", "Short winning-team Premium particle effect after round win; no sound", 0.0, 1.0);
     cvCelebrationSeconds = Setting("premium_round_celebration_seconds", "2", "Round-win effect duration", 0.5, 5.0);
     cvCelebrationBudget = Setting("premium_round_celebration_budget", "8", "Maximum simultaneous round-win emitters", 0.0, 16.0);
+    cvSpawnEffect = Setting("premium_spawn_effect", "0", "Brief member-only spawn particle; off by default; viewer visibility settings apply", 0.0, 1.0);
+    cvSpawnStyle = Setting("premium_spawn_effect_style", "0", "Owner-approved spawn style: 0 team teleport shimmer, 1 team critical sparkle", 0.0, 1.0);
+    cvSpawnSeconds = Setting("premium_spawn_effect_seconds", "1.5", "Spawn effect duration in seconds", 0.25, 5.0);
+    cvSpawnBudget = Setting("premium_spawn_effect_budget", "8", "Maximum simultaneous member spawn effects", 0.0, 32.0);
     cvChatTags = Setting("premium_chat_tags", "1", "Prefix ordinary player chat with membership or trial tag", 0.0, 1.0);
     cvMemberTag = CreateConVar("premium_chat_tag", "{green}[Premium]{default}", "Paid/flag member player-chat tag, More Colors markup");
     cvTrialTag = CreateConVar("premium_trial_chat_tag", "{lightgreen}[Trial]{default}", "Trial player-chat tag, More Colors markup");
@@ -101,6 +109,12 @@ void CreateConfiguration()
     cvPoints = Setting("premium_points_enable", "0", "Enable optional points economy; 0 also suspends purchased access without changing saved expiry", 0.0, 1.0);
     cvPointsEarn = Setting("premium_points_earning", "1", "Award play-time points when the economy is enabled", 0.0, 1.0);
     cvPointsShop = Setting("premium_points_shop", "1", "Allow purchases; disable separately to keep existing rentals active", 0.0, 1.0);
+    cvPointsGifts = Setting("premium_points_gifts", "0", "Allow buying individual feature rentals for another connected player; no trial gifts", 0.0, 1.0);
+    cvPointsTransfers = Setting("premium_points_transfers", "0", "Allow players to gift their own points to another connected player", 0.0, 1.0);
+    cvTransferMax = Setting("premium_points_transfer_max", "1000", "Maximum points per player gift; minimum amount is 1", 1.0, 1000000.0);
+    cvTransferDaily = Setting("premium_points_transfer_daily", "5000", "Maximum points sent per Steam ID per UTC day; 0 unlimited; persistent across reconnects", 0.0, 1000000000.0);
+    cvShopSpecials = Setting("premium_shop_specials", "0", "Apply shop offer availability windows and scheduled percentage discounts", 0.0, 1.0);
+    cvShopPauseMap = Setting("premium_shop_pause_unavailable", "1", "Block individual purchases and gifts for movement features disabled by current map rules", 0.0, 1.0);
     cvPointsRentals = Setting("premium_points_rentals", "1", "Honor purchased individual features; expiry still counts while disabled", 0.0, 1.0);
     cvPointsTrials = Setting("premium_points_trials", "0", "Allow/honor points-bought Premium trials independently of free premium_trial", 0.0, 1.0);
     cvPointsTrialLimit = Setting("premium_points_trial_limit", "1", "Lifetime purchased trials per Steam ID; 0 unlimited; never resets free-trial eligibility", 0.0, 10000.0);
@@ -163,4 +177,6 @@ public void FrameConfiguration(any data)
     InitializeEconomyStorage();
     ProcessEconomyOutbox();
     EnforceTeamSentryCaps();
+    EnforceTeamUtilityCaps();
+    RefreshSpawnEffects();
 }

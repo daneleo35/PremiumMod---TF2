@@ -20,6 +20,9 @@ void RegisterCommands()
     AdminCommand("premium_admin", CommandAdminMenu);
     PublicCommand("premium_points", CommandPoints);
     PublicCommand("premium_shop", CommandPointsShop);
+    PublicCommand("premium_gift", CommandGiftMenu);
+    PublicCommand("premium_giftpoints", CommandGiftPoints);
+    PublicCommand("premium_buildings", CommandBuildingOverview);
     if (!CommandExists("sm_points") && !CommandExists("points")) PublicCommand("points", CommandPoints);
     if (!CommandExists("sm_shop") && !CommandExists("shop")) PublicCommand("shop", CommandPointsShop);
     AdminCommand("premium_shop_reload", CommandShopReload);

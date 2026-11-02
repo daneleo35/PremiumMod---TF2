@@ -4,7 +4,7 @@ Give players extra TF2 features, choose who gets them, and keep the balance in y
 
 Give members a Premium package, make a few features free for everyone, or let players earn points and spend them in a shop. You choose the bonuses, prices, time limits and restrictions. Points are optional.
 
-**Current version: 3.0.0-rc20**
+**Current version: 3.0.0-rc21**
 
 ## What can it do?
 
@@ -106,6 +106,18 @@ premium_points_trial_limit "3"
 That allows three trial purchases per player in total. Set `premium_trial "0"` if you want to stop the separate free trial. **Time keeps counting while players are offline.** Buying glow gives only glow; buying a Premium trial gives the whole configured Premium package and a Trial tag.
 
 Points and points-bought trials start **off**. Free trials start **on**, lasting 15 minutes. Read [how to apply config changes](docs/wiki/Configuration.md) after editing.
+
+## New in RC21
+
+- Check your buildings' health, level and sapper status from `!premium` or `!premium_buildings`.
+- Give members a short spawn effect, with an owner-selected style and effect budget.
+- Buy a feature rental for another connected player through the points shop.
+- Send points to another player, with a maximum per gift and a saved daily limit.
+- Schedule shop discounts or rotate offers using availability windows.
+- Pause purchases for flight, airblast or teleport when the current map disables them.
+- Set separate team caps for extra dispensers and both teleporter directions.
+
+Spawn effects, feature gifting, points gifting and shop specials start switched off. Existing building limits still share six slots per Engineer. See [the RC21 guide](docs/wiki/RC21-Additions.md) for setup and commands.
 
 ## For players
 

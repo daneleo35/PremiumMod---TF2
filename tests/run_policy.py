@@ -140,7 +140,9 @@ if __name__ == '__main__':
     run('dependencies_tests.smx', 20)
     run('glow_tests.smx', 200)
     run('attributes_tests.smx', 10)
-    run('buildings_tests.smx', 118)
+    run('buildings_tests.smx', 142)
+    run('spawn_tests.smx', 15)
+    run('shop_quotes_tests.smx', 10)
     run('ammo_tests.smx', 15)
 
     run('options_tests.smx', 1000)

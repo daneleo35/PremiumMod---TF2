@@ -4,7 +4,7 @@ Premium Mod lets you choose extra features for your TF2 server and decide who ca
 
 You decide how generous it is. Keep it mostly cosmetic, add small bonuses, or turn up the settings for a fun server.
 
-This guide covers **3.0.0-rc20**.
+This guide covers **3.0.0-rc21**.
 
 ## Where to start
 
@@ -38,3 +38,5 @@ For a particular setting, use [All settings](Configuration-Reference.md). Server
 Start players with `!premium`; use `!premium_benefits` to see their actual bonuses. Chat tags work automatically for members and active Premium trials.
 
 [Source and downloads information](https://github.com/daneleo35/PremiumMod---TF2) · [Report a problem](https://github.com/daneleo35/PremiumMod---TF2/issues)
+
+See [RC21 additions](RC21-Additions.md) for the building overview, spawn effects, gifts, specials and team utility limits.

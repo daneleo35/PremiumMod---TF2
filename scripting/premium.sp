@@ -25,7 +25,7 @@
 #endif
 #include "premium/core.inc"
 
-#define VERSION "3.0.0-rc20"
+#define VERSION "3.0.0-rc21"
 #define STEAM_LENGTH 32
 #define MEMBER_TABLE "premium_v3_members"
 #define TRIAL_TABLE "premium_v3_trials"
@@ -109,6 +109,8 @@ ConVar cvBhop, cvBhopGain, cvBhopCap, cvDoubleJump, cvFlight, cvTeleport, cvTele
 ConVar cvFlightSpeed, cvFlightLift, cvFlightAcceleration, cvSentryLimit, cvChatTags, cvMemberTag, cvTrialTag;
 ConVar cvCloakMultiplier, cvDeadRingerMultiplier, cvGameplayTeams, cvSwapCooldown, cvSwapDifference;
 ConVar cvDispenserLimit, cvEntranceLimit, cvExitLimit;
+ConVar cvTeamDispensers, cvTeamEntrances, cvTeamExits, cvBuildingOverview;
+ConVar cvSpawnEffect, cvSpawnStyle, cvSpawnSeconds, cvSpawnBudget;
 ConVar cvTeamSentries, cvEngineerHud, cvSentryLabels, cvReminders, cvTagStyles, cvPersonalGlow;
 ConVar cvCelebration, cvCelebrationSeconds, cvCelebrationBudget;
 ConVar cvAirblast, cvAirblastForce, cvAirblastLift, cvAirblastCap, cvAirblastCooldown;
@@ -119,6 +121,7 @@ int g_UiSettingsRevision;
 #include "premium/options.inc"
 #include "premium/rules.inc"
 #include "premium/celebrations.inc"
+#include "premium/spawn_effects.inc"
 #include "premium/config.inc"
 #include "premium/dependencies.inc"
 #include "premium/glow.inc"
@@ -141,6 +144,8 @@ int g_UiSettingsRevision;
 #include "premium/presentation.inc"
 #include "premium/ui.inc"
 #include "premium/ui_shop.inc"
+#include "premium/ui_gifts.inc"
+#include "premium/building_overview.inc"
 #include "premium/ui_settings.inc"
 
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int maximum)
@@ -217,6 +222,7 @@ public void OnMapStart()
 {
     g_PendingProfile[0] = '\0';
     StopCelebrations();
+    StopSpawnEffects();
     LoadPremiumRules();
     g_RoundActive = true;
     g_NextAdvert = GetEngineTime() + 300.0;
@@ -237,6 +243,7 @@ public void OnMapEnd()
 {
     FlushEconomyClients();
     StopCelebrations();
+    StopSpawnEffects();
     g_RoundActive = false;
     g_Heartbeat = null; // NO_MAPCHANGE owns destruction.
     for (int client = 1; client <= MaxClients; client++)
@@ -256,6 +263,7 @@ public void OnPluginEnd()
 {
     FlushEconomyClients();
     StopCelebrations();
+    StopSpawnEffects();
     g_Stopping = true;
     if (g_Heartbeat != null) delete g_Heartbeat;
     for (int client = 1; client <= MaxClients; client++)
@@ -298,6 +306,7 @@ public void OnClientDisconnect(int client)
     FlushEconomyTime(client);
     ProcessEconomyOutbox();
     StopCelebration(client);
+    StopSpawnEffect(client);
     RemoveExtraBuildings(client);
     ResetGlow(client);
     CancelRespawn(client);
@@ -335,6 +344,8 @@ public Action Heartbeat(Handle timer)
         RefreshEngineerHud(client);
     }
     EnforceTeamSentryCaps();
+    EnforceTeamUtilityCaps();
+    RefreshSpawnEffects();
     RefreshCelebrations();
     float clock = GetEngineTime();
     if (!g_DatabaseReady && !g_Connecting && clock >= g_NextDatabaseRetry)

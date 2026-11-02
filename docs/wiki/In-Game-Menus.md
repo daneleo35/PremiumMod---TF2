@@ -71,6 +71,8 @@ The original config text and comments are kept. Later menu saves replace the men
 
 If another setting changes while a confirmation is open, review the new value before applying/saving. Immediate changes can affect current bonuses or remove extra buildings when limits are reduced. Save captures the values that are live now, not a preset still waiting for the next round.
 
-There are **91 numeric settings** available to edit. Membership flags and chat-tag text remain file edits. Storage connection settings also remain file edits; read [Backups and player data](Storage-and-Recovery.md) before changing them.
+There are **105 numeric settings** available to edit. Membership flags and chat-tag text remain file edits. Storage connection settings also remain file edits; read [Backups and player data](Storage-and-Recovery.md) before changing them.
 
 [Commands](Commands.md) · [Configuration](Configuration.md) · [Home](Home.md)
+
+See [RC21 additions](RC21-Additions.md) for the building overview, spawn effects, gifts, specials and team utility limits.

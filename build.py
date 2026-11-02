@@ -10,7 +10,7 @@ import sys
 import zipfile
 
 ROOT = Path(__file__).resolve().parent
-VERSION = '3.0.0-rc20'
+VERSION = '3.0.0-rc21'
 EXTERNAL_HEADERS = {'morecolors.inc', 'tf2attributes.inc'}
 
 
@@ -114,7 +114,7 @@ def main():
                        [libs/'smx/include'])
         compile_source(test_compiler, ROOT/'tests/ammo_tests.sp', ROOT/'tests/ammo_tests.smx',
                        [libs/'smx/include'])
-        for name in ('options', 'celebrations', 'airblast', 'chat', 'tooltip', 'features', 'economy', 'ui'):
+        for name in ('options', 'celebrations', 'spawn', 'shop_quotes', 'airblast', 'chat', 'tooltip', 'features', 'economy', 'ui'):
             compile_source(test_compiler, ROOT/f'tests/{name}_tests.sp', ROOT/f'tests/{name}_tests.smx', [libs/'smx/include'])
         compile_source(test_compiler, ROOT/'tests/economy_queries.sp', ROOT/'tests/economy_queries.smx', [libs/'smx/include'])
         policy = subprocess.run([sys.executable, 'tests/run_policy.py'], cwd=ROOT, text=True, capture_output=True)
@@ -131,6 +131,8 @@ def main():
                            options_assertions=checks['preferences and rules'], celebration_assertions=checks['celebration ownership'],
                            airblast_assertions=checks['airblast boost'], chat_assertions=checks['native chat tag'],
                            tooltip_assertions=checks['turret tooltip'], feature_assertions=checks['independent feature access'], economy_assertions=checks['points economy policy'], ui_assertions=checks['in-game UI safety'],
+                           spawn_assertions=checks['member spawn effect'],
+                           shop_quote_assertions=checks['shop quote'],
                            sqlite_tests=len(re.findall(r'\(test_storage\.', python_tests.stderr)),
                            artifact_tests=len(re.findall(r'\(test_artifacts\.', python_tests.stderr)),
                            economy_tests=len(re.findall(r'\(test_economy\.', python_tests.stderr)),

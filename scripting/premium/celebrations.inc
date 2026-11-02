@@ -40,5 +40,5 @@ void RebuildPremiumCosmetics()
 {
     // Delete existing instances so opting out also stops already-running client
     // emitters. The shared heartbeat recreates permitted emitters with transmit filtering.
-    for (int client = 1; client <= MaxClients; client++) { StopGlow(client); StopCelebration(client); }
+    for (int client = 1; client <= MaxClients; client++) { StopGlow(client); StopCelebration(client); StopSpawnEffect(client); }
 }

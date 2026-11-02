@@ -110,3 +110,5 @@ sm_premium_shop_reload
 The first example adds 100 points; the second takes away 25. Use a name or Steam ID. You can add or remove up to 1,000,000 per command. This does not cancel purchases or reset how many trials someone has bought. Read [Backing up player data](Storage-and-Recovery.md) before moving or restoring the database.
 
 [Commands](Commands.md) · [Access and trials](Access-and-Trials.md) · [Home](Home.md)
+
+See [RC21 additions](RC21-Additions.md) for the building overview, spawn effects, gifts, specials and team utility limits.

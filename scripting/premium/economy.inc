@@ -24,6 +24,22 @@ bool ReadShopInt(KeyValues file, const char[] key, int minimum, int maximum, int
     if (!PremiumDigits(raw) || strlen(raw) > 9) return false;
     value = StringToInt(raw); return value >= minimum && value <= maximum;
 }
+bool ReadShopOptionalInt(KeyValues file, const char[] key, int maximum, int &value)
+{
+    char raw[32]; file.GetString(key, raw, sizeof(raw), "0");
+    if (!PremiumDigits(raw) || strlen(raw) > 10 || (strlen(raw) == 10 && strcmp(raw, "2147483647") > 0)) return false;
+    value = StringToInt(raw); return value >= 0 && value <= maximum;
+}
+int ShopOfferPrice(int index)
+{
+    ShopOffer offer; offer = g_ShopOffers[index];
+    return cvShopSpecials.BoolValue && EconomyWindow(GetTime(), offer.saleFrom, offer.saleUntil)
+        ? EconomySalePrice(offer.price, offer.discount) : offer.price;
+}
+bool ShopOfferOpen(int index)
+{
+    return !cvShopSpecials.BoolValue || EconomyWindow(GetTime(), g_ShopOffers[index].availableFrom, g_ShopOffers[index].availableUntil);
+}
 bool LoadShopCatalog()
 {
     g_ShopRevision++; g_ShopCount = 0; g_ShopValid = false;
@@ -41,6 +57,14 @@ bool LoadShopCatalog()
             || !ReadShopInt(file, "enabled", 0, 1, enabled) || !ReadShopInt(file, "price", 1, 1000000, offer.price)
             || !ReadShopInt(file, "duration", 1, 525600, amount) || (!StrEqual(feature, "trial") && offer.feature < 0)
             || !(offer.duration = EconomyDuration(amount, unit))) { valid = false; break; }
+        if (!ReadShopOptionalInt(file, "available_from", 2147483647, offer.availableFrom)
+            || !ReadShopOptionalInt(file, "available_until", 2147483647, offer.availableUntil)
+            || !ReadShopOptionalInt(file, "sale_from", 2147483647, offer.saleFrom)
+            || !ReadShopOptionalInt(file, "sale_until", 2147483647, offer.saleUntil)
+            || !ReadShopOptionalInt(file, "discount_percent", 99, offer.discount)
+            || (offer.availableUntil && offer.availableFrom >= offer.availableUntil)
+            || (offer.saleUntil && offer.saleFrom >= offer.saleUntil)
+            || (offer.discount > 0 && !offer.saleUntil)) { valid = false; break; }
         if (!enabled) continue;
         for (int i; i < g_ShopCount; i++) if (StrEqual(offer.id, g_ShopOffers[i].id)) valid = false;
         if (!valid || g_ShopCount >= sizeof(g_ShopOffers)) { valid = false; break; }
@@ -86,32 +110,40 @@ bool ShopConfigured(int client, int feature)
         case Feature_DeadRinger: return class == TFClass_Spy && cvCloak.BoolValue && cvDeadRingerMultiplier.FloatValue > 1.0;
         case Feature_Metal: return class == TFClass_Engineer && cvMetal.IntValue > 200;
         case Feature_Sentry: return class == TFClass_Engineer && cvSentryLimit.IntValue > 1 && cvTeamSentries.IntValue > 0 && !GameRules_GetProp("m_bPlayingMannVsMachine") && GameRules_GetProp("m_nGameType") != 4;
-        case Feature_Dispenser: return class == TFClass_Engineer && cvDispenserLimit.IntValue > 1 && !GameRules_GetProp("m_bPlayingMannVsMachine") && GameRules_GetProp("m_nGameType") != 4;
-        case Feature_Teleporter: return class == TFClass_Engineer && (cvEntranceLimit.IntValue > 1 || cvExitLimit.IntValue > 1) && !GameRules_GetProp("m_bPlayingMannVsMachine") && GameRules_GetProp("m_nGameType") != 4;
+        case Feature_Dispenser: return class == TFClass_Engineer && cvDispenserLimit.IntValue > 1 && cvTeamDispensers.IntValue != 0 && !GameRules_GetProp("m_bPlayingMannVsMachine") && GameRules_GetProp("m_nGameType") != 4;
+        case Feature_Teleporter: return class == TFClass_Engineer && ((cvEntranceLimit.IntValue > 1 && cvTeamEntrances.IntValue != 0) || (cvExitLimit.IntValue > 1 && cvTeamExits.IntValue != 0)) && !GameRules_GetProp("m_bPlayingMannVsMachine") && GameRules_GetProp("m_nGameType") != 4;
         case Feature_FireArrows: return class == TFClass_Sniper && cvArrows.BoolValue;
         case Feature_Bhop: return ConfiguredBhop(client);
         case Feature_DoubleJump: return ConfiguredBhop(client) && ConfiguredDoubleJump(client) && (ResolveFeatureMask(client) & PremiumFeatureBit(Feature_Bhop)) != 0;
-        case Feature_Flight: return class == TFClass_Pyro && ConfiguredFlight(client);
-        case Feature_Airblast: return class == TFClass_Pyro && ConfiguredAirblast(client);
-        case Feature_Teleport: return ConfiguredTeleport(client);
+        case Feature_Flight: return class == TFClass_Pyro && PremiumToggle(cvFlight.BoolValue, g_ClassRules[RuleClass(client)].flight) && (!cvShopPauseMap.BoolValue || g_MapFlight);
+        case Feature_Airblast: return class == TFClass_Pyro && PremiumToggle(cvAirblast.BoolValue, g_ClassRules[RuleClass(client)].airblast) && (!cvShopPauseMap.BoolValue || g_MapFlight);
+        case Feature_Teleport: return PremiumToggle(cvTeleport.BoolValue, g_ClassRules[RuleClass(client)].teleport) && (!cvShopPauseMap.BoolValue || g_MapTeleport);
         case Feature_Celebration: return cvCelebration.BoolValue;
         case Feature_FakeKill: return cvFakeKill.BoolValue;
     }
     return false;
 }
 
-bool ShopCanBuy(int client, int index, char[] reason, int size)
+bool ShopCanBuyFor(int buyer, int client, int index, bool gift, char[] reason, int size)
 {
+    if (!ValidClient(buyer) || !ValidClient(client) || IsFakeClient(client) || !g_Economy[buyer].loaded || !g_Economy[client].loaded)
+    { strcopy(reason, size, "Both accounts must be connected and loaded."); return false; }
+    if (gift && (!cvPointsGifts.BoolValue || buyer == client))
+    { strcopy(reason, size, "Gifting is disabled or this recipient is invalid."); return false; }
     if (!cvPointsShop.BoolValue || !g_ShopValid || index < 0 || index >= g_ShopCount)
     { strcopy(reason, size, "The points shop is disabled or this offer is unavailable."); return false; }
-    if (g_Economy[client].purchasing) { strcopy(reason, size, "Your previous purchase is still settling."); return false; }
+    if (!ShopOfferOpen(index)) { strcopy(reason, size, "This offer is outside its scheduled availability window."); return false; }
+    if (g_Economy[buyer].purchasing || g_Economy[client].purchasing) { strcopy(reason, size, "Your previous purchase is still settling."); return false; }
     if (!g_Player[client].loaded) { strcopy(reason, size, "Your membership record is still loading; nothing can be purchased yet."); return false; }
-    ShopOffer offer; offer = g_ShopOffers[index];
+    ShopOffer offer; offer = g_ShopOffers[index]; offer.price = ShopOfferPrice(index);
+    if (gift && offer.feature < 0) { strcopy(reason, size, "Only individual feature rentals can be gifted, not Premium trials."); return false; }
+    if (!EconomyMapAllows(offer.feature, g_MapFlight, g_MapTeleport, cvShopPauseMap.BoolValue))
+    { strcopy(reason, size, "This feature is disabled on the current map. Purchases are paused."); return false; }
     if (!ShopConfigured(client, offer.feature)) { strcopy(reason, size, "This feature is disabled for your current configuration, map or class."); return false; }
     if (offer.feature < 0)
     {
         if (HasPremium(client)) { strcopy(reason, size, "You already have active Premium/trial membership. Wait until it expires."); return false; }
-        if (!EconomyCanBuyTrial(g_Economy[client].points, offer.price, g_Economy[client].trialUntil, GetTime(), g_Economy[client].trialPurchases, cvPointsTrialLimit.IntValue))
+        if (!EconomyCanBuyTrial(g_Economy[buyer].points, offer.price, g_Economy[client].trialUntil, GetTime(), g_Economy[client].trialPurchases, cvPointsTrialLimit.IntValue))
         { strcopy(reason, size, "Not enough points, or your lifetime purchased-trial limit has been reached."); return false; }
     }
     else
@@ -123,10 +155,15 @@ bool ShopCanBuy(int client, int index, char[] reason, int size)
         if (!cvPointsRentals.BoolValue) { strcopy(reason, size, "Purchased individual feature access is disabled."); return false; }
         if (ResolveBaseFeatureMask(client) & (1 << offer.feature))
         { strcopy(reason, size, "You already have this feature through membership, a free grant or a permission override."); return false; }
-        if (!EconomyCanRent(g_Economy[client].points, offer.price, g_Economy[client].rentalUntil[offer.feature], GetTime(), offer.duration, cvPointsRenew.BoolValue, cvPointsMaxDays.IntValue))
+        if (!EconomyCanRent(g_Economy[buyer].points, offer.price, g_Economy[client].rentalUntil[offer.feature], GetTime(), offer.duration, cvPointsRenew.BoolValue, cvPointsMaxDays.IntValue))
         { strcopy(reason, size, "Not enough points, renewals are disabled, or the maximum rental duration would be exceeded."); return false; }
     }
     reason[0] = '\0'; return true;
+}
+
+bool ShopCanBuy(int client, int index, char[] reason, int size)
+{
+    return ShopCanBuyFor(client, client, index, false, reason, size);
 }
 
 void DisplayPointsShop(int client)
@@ -134,13 +171,8 @@ void DisplayPointsShop(int client)
     UiShopHome(client);
 }
 
-bool ShopMenuItem(Menu menu, int selection, int &index)
-{
-    char data[64], parts[2][32]; menu.GetItem(selection, data, sizeof(data));
-    if (ExplodeString(data, ":", parts, sizeof(parts), sizeof(parts[])) != 2 || !PremiumDigits(parts[0]) || !PremiumDigits(parts[1])
-        || StringToInt(parts[0]) != g_ShopRevision) return false;
-    index = StringToInt(parts[1]); return index >= 0 && index < g_ShopCount;
-}
+#include "shop_quotes.inc"
+
 public int PointsShopSelected(Menu menu, MenuAction action, int client, int selection)
 {
     if (action == MenuAction_End) delete menu;
@@ -149,15 +181,16 @@ public int PointsShopSelected(Menu menu, MenuAction action, int client, int sele
     {
         int index; char reason[192], time[32];
         if (!ShopMenuItem(menu, selection, index)) { Tell(client, "The shop changed. Please choose the offer again."); UiShopHome(client); return 0; }
+        int price = ShopOfferPrice(index);
         bool available = ShopCanBuy(client, index, reason, sizeof(reason));
         PremiumUiDuration(g_ShopOffers[index].duration, time, sizeof(time));
         Menu confirm = new Menu(PointsPurchaseSelected);
         confirm.SetTitle("%s\nPrice: %d points | Length: %s\nYour balance: %d points\nOffline time counts\n%s\n ",
-            g_ShopOffers[index].name, g_ShopOffers[index].price, time, g_Economy[client].points,
+            g_ShopOffers[index].name, price, time, g_Economy[client].points,
             g_ShopOffers[index].feature < 0 ? "Full Premium package + Trial tag" : "This feature only; no Premium tag");
-        char data[64]; FormatEx(data, sizeof(data), "%d:%d", g_ShopRevision, index);
+        char data[64]; FormatEx(data, sizeof(data), "%d:%d:%d", g_ShopRevision, index, price);
         if (!available) confirm.AddItem("info", reason, ITEMDRAW_DISABLED);
-        else { char after[64]; FormatEx(after, sizeof(after), "Balance afterwards: %d points", g_Economy[client].points - g_ShopOffers[index].price); confirm.AddItem("info", after, ITEMDRAW_DISABLED); }
+        else { char after[64]; FormatEx(after, sizeof(after), "Balance afterwards: %d points", g_Economy[client].points - price); confirm.AddItem("info", after, ITEMDRAW_DISABLED); }
         confirm.AddItem(data, "Confirm purchase", available ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED);
         confirm.AddItem("cancel", "Back to shop"); confirm.ExitBackButton = true; confirm.Display(client, 30);
     }
@@ -172,9 +205,11 @@ public int PointsPurchaseSelected(Menu menu, MenuAction action, int client, int 
         char data[64]; menu.GetItem(selection, data, sizeof(data));
         if (StrEqual(data, "cancel")) { UiShopHome(client); return 0; }
         int index; char reason[192];
-        if (!ShopMenuItem(menu, selection, index)) { Tell(client, "The shop changed. Nothing purchased; please choose again."); UiShopHome(client); return 0; }
+        if (!ShopMenuItem(menu, selection, index, true)) { Tell(client, "The shop or price changed. Nothing purchased; please choose again."); UiShopHome(client); return 0; }
         if (!ShopCanBuy(client, index, reason, sizeof(reason))) { Tell(client, "%s", reason); UiShopHome(client); return 0; }
-        ShopOffer offer; offer = g_ShopOffers[index]; EconomyOperation op;
+        // Keep the exact confirmed price even if a sale ends during this frame.
+        char terms[3][32]; ExplodeString(data, ":", terms, sizeof(terms), sizeof(terms[]));
+        ShopOffer offer; offer = g_ShopOffers[index]; offer.price = StringToInt(terms[2]); EconomyOperation op;
         NewEconomyOperation(op, offer.feature < 0 ? Economy_Trial : Economy_Rent, g_Economy[client].steam);
         op.feature = offer.feature; op.price = offer.price; op.duration = offer.duration; op.buyerSerial = GetClientSerial(client);
         if (!QueueEconomyOperation(op)) { Tell(client, "%t", "Points Pending"); return 0; }
