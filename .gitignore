@@ -14,3 +14,6 @@ scripting/include/morecolors.inc
 scripting/include/tf2attributes.inc
 *.cfg.menu-new
 *.cfg.menu-bak
+
+# Guides live in the separate GitHub Wiki.
+docs/
