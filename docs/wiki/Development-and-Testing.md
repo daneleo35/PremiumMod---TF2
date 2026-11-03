@@ -2,6 +2,8 @@
 
 This repository contains the rewrite source, curated configs, translations, tests and build tooling. Third-party headers/compiler files and game-server dependencies are downloaded separately. No custom TF2 engine DLL/SO is distributed.
 
+The separate source ZIP has the build workspace at its root: `scripting/`, `configs/`, `translations/`, `tests/`, `tools/`, `build.py` and licence notices. Extract it into an empty development folder, then run the bootstrap and build commands below, starting with `python tools/bootstrap.py`. You do not need to clone GitHub when using that ZIP. Guides, compiled plugins, downloaded toolchains and nested development folders are excluded. The install ZIP has only the server's `addons/` and `cfg/` files; the build report stays locally in `dist/`.
+
 ## Build on Windows
 
 Install Git and Python 3.10 or later, then:

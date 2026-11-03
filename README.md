@@ -43,6 +43,8 @@ Start with the [Wiki](https://github.com/daneleo35/PremiumMod---TF2/wiki). A cop
 
 ## Install it
 
+Get the server ZIP from [Releases](https://github.com/daneleo35/PremiumMod---TF2/releases/latest). It contains only `addons/` and `cfg/`, ready to extract into `tf/`. The separate source ZIP is for building the plugin; guides stay here and on the Wiki.
+
 You need a TF2 server running SourceMod, plus [TF2Attributes and its matching gamedata](https://github.com/FlaminSarge/tf2attributes/releases/tag/v1.7.5.1). Install TF2Attributes separately.
 
 This repository contains the source. GitHub's **Download ZIP** button does not give you a ready-to-install plugin. To build an install ZIP on Windows, install Git and Python 3.10 or newer, then run:

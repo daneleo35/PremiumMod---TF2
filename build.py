@@ -78,6 +78,46 @@ def create_config():
     return '\n'.join(lines)
 
 
+def package_file_sets(output):
+    # The install archive is extracted into tf/: only server runtime files.
+    members = {
+        'addons/sourcemod/plugins/premium.smx': output,
+        'addons/sourcemod/translations/premium_rebuilt.phrases.txt': ROOT/'translations/premium_rebuilt.phrases.txt',
+        'cfg/sourcemod/premium_rebuilt.cfg': ROOT/'configs/premium_rebuilt.cfg',
+        'addons/sourcemod/configs/premium_rules.cfg': ROOT/'configs/premium_rules.cfg',
+        'addons/sourcemod/configs/premium_features.cfg': ROOT/'configs/premium_features.cfg',
+        'addons/sourcemod/configs/premium_shop.cfg': ROOT/'configs/premium_shop.cfg',
+    }
+    for source in (ROOT/'configs/premium_profiles').glob('*.cfg'):
+        members['cfg/sourcemod/premium_profiles/' + source.name] = source
+
+    # The separate source archive is the build workspace, without downloaded
+    # SDKs, generated binaries, guides, live data or nested development copies.
+    names = ['build.py', '.gitignore', 'LICENSE.txt', 'THIRD-PARTY.txt',
+             'tools/bootstrap.py', 'tools/config_layout.py', 'tools/prepare_ui.py',
+             'configs/premium_rebuilt.cfg', 'configs/premium_rules.cfg',
+             'configs/premium_features.cfg', 'configs/premium_shop.cfg',
+             'configs/premium-databases.example.txt']
+    names += [p.relative_to(ROOT).as_posix() for p in (ROOT/'configs/premium_profiles').glob('*.cfg')]
+    for directory, suffixes in (('scripting', {'.sp', '.inc'}),
+                               ('translations', {'.txt'}), ('tests', {'.sp', '.py', '.txt'})):
+        names += [p.relative_to(ROOT).as_posix() for p in (ROOT/directory).rglob('*')
+                  if p.is_file() and p.suffix in suffixes and p.name.lower() not in EXTERNAL_HEADERS
+                  and not {'__pycache__', 'tmp'}.intersection(p.relative_to(ROOT).parts)]
+    development = {name: ROOT/name for name in sorted(set(names))}
+    return members, development
+
+
+def write_archives(dist, members, development):
+    dist.mkdir(parents=True, exist_ok=True)
+    archive = dist/f'premium-rebuilt-{VERSION}.zip'
+    source_archive = dist/f'premium-rebuilt-{VERSION}-source.zip'
+    for destination, files in ((archive, members), (source_archive, development)):
+        with zipfile.ZipFile(destination, 'w', compression=zipfile.ZIP_DEFLATED) as package:
+            for name, path in sorted(files.items()): package.write(path, name)
+    return archive, source_archive
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--test', action='store_true', help='Run policy VM, SQLite integration, and artifact checks')
@@ -139,47 +179,16 @@ def main():
                            policy_vm='pysmx 0.4.0 / SourcePawn 1.11.0.6931', release_compiler='SourcePawn 1.12.0.7259')
     config = create_config()
     (ROOT/'configs/premium_rebuilt.cfg').write_text(config, encoding='utf-8')
-    members = {
-        'addons/sourcemod/plugins/premium.smx': output,
-        'addons/sourcemod/translations/premium_rebuilt.phrases.txt': ROOT/'translations/premium_rebuilt.phrases.txt',
-        'cfg/sourcemod/premium_rebuilt.cfg': ROOT/'configs/premium_rebuilt.cfg',
-        'addons/sourcemod/configs/premium_rules.cfg': ROOT/'configs/premium_rules.cfg',
-        'addons/sourcemod/configs/premium_features.cfg': ROOT/'configs/premium_features.cfg',
-        'addons/sourcemod/configs/premium_shop.cfg': ROOT/'configs/premium_shop.cfg',
-    }
-    for source in (ROOT/'configs/premium_profiles').glob('*.cfg'):
-        members['cfg/sourcemod/premium_profiles/' + source.name] = source
-    for source in (ROOT/'scripting').rglob('*'):
-        if source.is_file() and source.name not in EXTERNAL_HEADERS:
-            members['addons/sourcemod/scripting/' + source.relative_to(ROOT/'scripting').as_posix()] = source
-    for name in ('README.md', 'LICENSE.txt', 'THIRD-PARTY.txt'):
-        members[name] = ROOT/name
-    for source in (ROOT/'docs').rglob('*.md'): members['docs/' + source.relative_to(ROOT/'docs').as_posix()] = source
-    members['configs/premium-databases.example.txt'] = ROOT/'configs/premium-databases.example.txt'
-    # Include a self-contained source tree with the bootstrap/build/test scripts.
-    development = ['build.py', '.gitignore', 'README.md', 'LICENSE.txt', 'THIRD-PARTY.txt', 'tools/bootstrap.py', 'tools/config_layout.py', 'tools/prepare_ui.py',
-                   'configs/premium-databases.example.txt', 'configs/premium_rebuilt.cfg', 'configs/premium_rules.cfg', 'configs/premium_features.cfg', 'configs/premium_shop.cfg']
-    for directory in ('scripting', 'translations', 'docs', 'tests'):
-        development += [p.relative_to(ROOT).as_posix() for p in (ROOT/directory).rglob('*')
-                        if p.is_file() and p.suffix in ('.sp', '.inc', '.py', '.txt', '.md')
-                        and p.name not in EXTERNAL_HEADERS
-                        and '__pycache__' not in p.parts and 'tmp' not in p.relative_to(ROOT).parts]
-    development += [p.relative_to(ROOT).as_posix() for p in (ROOT/'configs/premium_profiles').glob('*.cfg')]
-    for name in development: members['development/' + name] = ROOT/name
+    members, development = package_file_sets(output)
     hashes = {name: hashlib.sha256(path.read_bytes()).hexdigest() for name, path in members.items()}
     manifest = dict(version=VERSION, compiler='1.12.0.7259', tf2attributes='1.7.5.1', morecolors='1.9.1 / 5fd5e7ae77cd4f53e0805d0792390545d6037f30', tests=test_report,
                     dependency_packaging={'tf2attributes': 'Install separately; no dependency files bundled',
                                           'morecolors': 'Embedded in premium.smx; separate header excluded'},
-                    compiler_output=compiler_output, files=hashes)
+                    compiler_output=compiler_output, files=hashes,
+                    source_files={name: hashlib.sha256(path.read_bytes()).hexdigest() for name, path in development.items()})
     (dist/'build-report.json').write_text(json.dumps(manifest, indent=2), encoding='utf-8')
-    archive = dist/f'premium-rebuilt-{VERSION}.zip'
-    with zipfile.ZipFile(archive, 'w', compression=zipfile.ZIP_DEFLATED) as package:
-        for name, path in sorted(members.items()): package.write(path, name)
-        package.write(dist/'build-report.json', 'build-report.json')
+    archive, source_archive = write_archives(dist, members, development)
     print(f'Built {archive} ({archive.stat().st_size:,} bytes)')
-    source_archive = dist/f'premium-rebuilt-{VERSION}-source.zip'
-    with zipfile.ZipFile(source_archive, 'w', compression=zipfile.ZIP_DEFLATED) as package:
-        for name in development: package.write(ROOT/name, name)
     print(f'Built source-only archive {source_archive} ({source_archive.stat().st_size:,} bytes)')
 
 

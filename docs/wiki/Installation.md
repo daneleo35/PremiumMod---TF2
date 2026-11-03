@@ -46,7 +46,7 @@ tf/
       fun.cfg
 ```
 
-The archive also includes source/development documentation. Those extra files are not runtime dependencies. Never run the old Premium plugin and this rewrite together: their command registrations overlap.
+The install ZIP contains only `addons/` and `cfg/`, ready to extract into `tf/`. Source code and build tools are in the separate source ZIP; guides stay on GitHub and the Wiki. Never run the old Premium plugin and this rewrite together: their command registrations overlap.
 
 ## First start
 
